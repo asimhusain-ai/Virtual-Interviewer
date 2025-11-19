@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard | GitHub-Style Sidebar + Charts + Table</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body[data-theme="theme-dark"] {
+      --bg: #0d1117;
+      --panel: #11161f;
+      --sidebar: #0d1117;
+      --surface: #161b22;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --success: #2ea043;
+      --border: #30363d;
+      --input-bg: #0e1520;
+      --input-b: #2f363d;
+      --table-head-bg: #1c2128;
+      --row-hover: #161b22;
+      --btn-bg: #21262d;
+      --btn-hover: #2b3138;
+      --chart-1: #58a6ff;
+      --chart-2: #2ea043;
+      --shadow: 0 22px 48px rgba(3, 7, 18, 0.45);
+      --table-head-text: #ffffff;
+      --results-heading-text: #ffffff;
+    }
+    body[data-theme="theme-light"] {
+      --bg: #ffffff;
+      --panel: #fefefe;
+      --sidebar: #f6f8fa;
+      --surface: #ffffff;
+      --text: #24292f;
+      --muted: #57606a;
+      --accent: #0969da;
+      --success: #2da44e;
+      --border: #d0d7de;
+      --input-bg: #ffffff;
+      --input-b: #000000;
+      --table-head-bg: #f6f8fa;
+      --row-hover: #f6f8fa;
+      --btn-bg: #f6f8fa;
+      --btn-hover: #eaeef2;
+      --chart-1: #0969da;
+      --chart-2: #2da44e;
+      --shadow: 0 22px 36px rgba(15, 23, 42, 0.12);
+      --table-head-text: #000000;
+      --results-heading-text: #000000;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    }
+    a {
+      color: inherit;
+    }
+
+    .container > .toggle {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 70;
+    }
+
+    /* From Uiverse.io by santosh-sarkar */
+    .toggle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .input {
+      display: none;
+    }
+
+    .icon {
+      grid-column: 1 / 1;
+      grid-row: 1 / 1;
+      transition: transform 500ms;
+      line-height: 0.1;
+    }
+
+    .icon--moon {
+      transition-delay: 200ms;
+      color: #b4b4b4;
+    }
+
+    .icon--sun {
+      transform: scale(0);
+      color: #ffa500;
+    }
+
+    #switch:checked + .icon--moon {
+      transform: rotate(360deg) scale(0);
+    }
+
+    #switch:checked ~ .icon--sun {
+      transition-delay: 200ms;
+      transform: scale(1) rotate(360deg);
+    }
+
+    .icon--moon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    input.input,
+    textarea.input,
+    select.input {
+      display: block;
+    }
+
+    .toggle .input {
+      display: none;
+    }
+
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      background: var(--bg);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      flex: 0 0 320px;
+      max-width: 360px;
+      padding: 12px 24px 40px;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      transition: padding 0.3s ease;
+    }
+    @media (min-width: 1200px) {
+      .sidebar {
+        flex: 0 0 360px;
+        max-width: 400px;
+        padding-left: 32px;
+        padding-right: 32px;
+      }
+    }
+
+    .sidebar-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .sidebar-nav a {
+      color: var(--text);
+      text-decoration: none;
+      opacity: 0.9;
+      transition: color 0.2s ease;
+      white-space: nowrap;
+    }
+    .sidebar-nav a:hover {
+      color: var(--accent);
+    }
+    .sidebar-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 0;
+    }
+
+    .avatar-wrap {
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .avatar-action-bar {
+      display: none;
+      position: absolute;
+      inset: auto 0 0 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+      padding: 6px 8px 10px;
+      gap: 8px;
+      justify-content: center;
+    }
+    body.profile-editing .avatar-action-bar {
+      display: flex;
+    }
+    .avatar-btn {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .avatar-btn:hover {
+      background: rgba(0, 0, 0, 0.6);
+      border-color: #fff;
+    }
+    .avatar-btn.danger {
+      border-color: rgba(255, 90, 90, 0.6);
+      color: #ffdede;
+    }
+    .avatar-btn.danger:hover {
+      background: rgba(120, 0, 0, 0.55);
+    }
+    .avatar-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+    #avatarFileInput {
+      display: none;
+    }
+
+    .name-badge-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 12px 0 0;
+      min-height: 36px;
+      align-self: center;
+    }
+    .name {
+      font-weight: 800;
+      font-size: 28px;
+      text-align: center;
+      display: inline-block;
+      margin: 0;
+    }
+    .name-badge-icon {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border: none;
+      box-shadow: none;
+      background: transparent;
+    }
+    .name-badge-icon[hidden] {
+      display: none !important;
+    }
+    .meta-line {
+      color: var(--muted);
+      text-align: left;
+      margin: 0 0 2px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .meta-item {
+      font-weight: 600;
+      color: var(--muted);
+      display: none;
+    }
+    .meta-divider {
+      color: #000000ff;
+      display: none;
+      font-weight: 900;
+    }
+    .bio {
+      margin: 2px 0 4px;
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.4;
+      text-align: left;
+    }
+    #viewList {
+      margin-top: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--btn-bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+      text-align: center;
+    }
+    .btn:hover {
+      background: var(--btn-hover);
+    }
+    .btn:active {
+      transform: translateY(1px);
+    }
+    .btn.success {
+      background: var(--success);
+      color: #031807;
+      border: none;
+    }
+    .btn.cancel {
+      background: var(--btn-bg);
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+    .item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .item .ic {
+      width: 20px;
+      flex-shrink: 0;
+      opacity: 0.95;
+    }
+    .item a {
+      color: var(--text);
+      text-decoration: none;
+      word-break: break-word;
+      transition: color 0.2s ease;
+    }
+    .item a:hover {
+      color: var(--accent);
+    }
+    .item a:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+
+    .edit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 14px;
+      display: none;
+      box-shadow: var(--shadow);
+    }
+    .password-section {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: none;
+      gap: 14px;
+    }
+    .password-section.is-active {
+      display: grid;
+    }
+    .password-toggle-btn {
+      margin-top: 12px;
+    }
+    .password-section h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .password-section .hint {
+      margin: -4px 0 4px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .f {
+      margin-bottom: 14px;
+    }
+    .f:last-of-type {
+      margin-bottom: 0;
+    }
+    .f label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .input,
+    .textarea,
+    .select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--input-b);
+      background: var(--input-bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .input:hover,
+    .textarea:hover,
+    .select:hover {
+      border-color: var(--accent);
+    }
+    .input:focus,
+    .textarea:focus,
+    .select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.25);
+    }
+    .textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+    .input-error {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: #dc2626;
+      display: none;
+    }
+    .row-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .row-actions .btn {
+      width: auto;
+      flex: 1 1 50%;
+      min-width: 0;
+      max-width: none;
+    }
+    #saveBtn,
+    #passwordSaveBtn {
+      background: var(--btn-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    #saveBtn:hover,
+    #saveBtn:focus-visible,
+    #passwordSaveBtn:hover,
+    #passwordSaveBtn:focus-visible {
+      background: var(--btn-hover);
+    }
+
+    body.profile-editing .sidebar {
+      padding: 26px 20px 32px;
+    }
+    body.profile-editing .sidebar-content {
+      gap: 12px;
+    }
+    body.profile-editing .avatar-wrap {
+      width: 170px;
+      height: 170px;
+    }
+    body.profile-editing .name-badge-line {
+      margin: 10px 0 4px;
+    }
+    body.profile-editing .name {
+      font-size: 22px;
+    }
+    body.profile-editing .meta-line {
+      font-size: 0.9rem;
+    }
+    body.profile-editing .edit-card {
+      padding: 12px;
+    }
+    body.profile-editing .f {
+      margin-bottom: 10px;
+    }
+    body.profile-editing .f label {
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+    body.profile-editing .input,
+    body.profile-editing .textarea,
+    body.profile-editing .select {
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+    body.profile-editing .textarea {
+      min-height: 64px;
+    }
+    body.profile-editing .btn {
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+    body.profile-editing .avatar-action-bar .avatar-btn {
+      width: 32px;
+      height: 32px;
+    }
+
+    /* Main column */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 18px 32px;
+      background: var(--panel);
+    }
+    .pipe {
+      color: var(--muted);
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      padding: 32px clamp(20px, 5vw, 48px) 48px;
+    }
+
+    /* Charts */
+    .charts {
+      display: grid;
+      grid-template-columns: minmax(320px, 610px) minmax(420px, 1fr);
+      gap: clamp(20px, 4vw, 36px);
+      align-items: stretch;
+    }
+    .chart-card {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 24px clamp(16px, 3vw, 28px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      min-height: 0;
+    }
+    .chart-card--doughnut {
+      max-width: 610px;
+      justify-self: stretch;
+    }
+    .chart-card--metrics {
+      max-width: 860px;
+      justify-self: stretch;
+    }
+    .chart-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .chart-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+    }
+    .chart-canvas {
+      position: relative;
+      width: 100%;
+      height: 340px;
+      min-height: 0;
+    }
+    .chart-card:first-child .chart-canvas {
+      height: 340px;
+    }
+    .chart-card:last-child .chart-canvas {
+      height: 360px;
+    }
+    .chart-canvas canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .chart-legend .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .chart-legend .label {
+      color: var(--muted);
+    }
+    .chart-legend .value {
+      color: var(--text);
+      display: inline-flex;
+      gap: 4px;
+    }
+    .chart-legend .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: inline-block;
+    }
+    .chart-controls {
+      display: flex;
+      justify-content: center;
+    }
+    .range-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .range-wrap input[type="range"] {
+      width: min(320px, 100%);
+    }
+
+    /* Results */
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 28px clamp(18px, 4vw, 32px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .results-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: var(--results-heading-text);
+      font-weight: 700;
+    }
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      min-width: 640px;
+      border-collapse: collapse;
+      background: var(--surface);
+    }
+    th,
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    td.actions {
+      text-align: center;
+      white-space: nowrap;
+    }
+    th.actions-col {
+      text-align: center;
+    }
+    .results .action-btn {
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: background 0.2s ease;
+    }
+    .results .action-btn:hover,
+    .results .action-btn:focus-visible {
+      background: rgba(88, 166, 255, 0.12);
+      outline: none;
+    }
+    .results .action-btn.action-btn-remove {
+      color: #f87171;
+      font-weight: 700;
+    }
+    .results .action-btn.action-btn-remove:hover,
+    .results .action-btn.action-btn-remove:focus-visible {
+      background: rgba(248, 113, 113, 0.18);
+      color: #f87171;
+    }
+    th {
+      background: var(--table-head-bg);
+      color: var(--table-head-text);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      font-size: 0.85rem;
+    }
+    tbody tr:hover {
+      background: var(--row-hover);
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Responsive tweaks */
+    @media (min-width: 992px) {
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+      }
+      .sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(136, 146, 176, 0.4);
+        border-radius: 12px;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .sidebar {
+        flex: 0 0 300px;
+      }
+      .charts {
+        grid-template-columns: 1fr;
+      }
+      .chart-card--doughnut,
+      .chart-card--metrics {
+        max-width: none;
+        justify-self: stretch;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .app-shell {
+        flex-direction: column;
+      }
+      .sidebar {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 12px 20px 32px;
+        position: static;
+      }
+      .sidebar-content {
+        margin-top: 56px;
+      }
+      .main-content {
+        padding: 28px 20px 40px;
+      }
+      .topbar {
+        padding: 16px 20px;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      .app-shell {
+        min-height: auto;
+      }
+      .sidebar {
+        width: 100%;
+        padding: 16px 18px 28px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        gap: 14px;
+      }
+      .sidebar-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+      .sidebar .btn {
+        max-width: 320px;
+        margin: 0 auto;
+      }
+      .avatar-wrap {
+        width: 180px;
+        height: 180px;
+      }
+      .main-content {
+        padding: 24px 18px 36px;
+        gap: 24px;
+      }
+      .topbar {
+        padding: 14px 18px;
+        gap: 10px;
+      }
+      .charts {
+        gap: 20px;
+      }
+      .chart-card {
+        padding: 20px 18px;
+      }
+      .results {
+        padding: 18px 16px;
+      }
+      .chart-card--doughnut,
+      .chart-card--metrics {
+        max-width: none;
+      }
+      .chart-title {
+        font-size: 1rem;
+      }
+      .row-actions {
+        flex-wrap: nowrap;
+      }
+      .row-actions .btn {
+        flex: 1 1 50%;
+        min-width: 0;
+        max-width: none;
+      }
+      .chart-canvas {
+        height: 260px;
+      }
+      .chart-card:last-child .chart-canvas {
+        height: 280px;
+      }
+      .chart-legend {
+        gap: 8px 12px;
+      }
+      .btn,
+      .results .action-btn {
+        min-height: 44px;
+        padding: 12px 14px;
+      }
+      .results-header h2 {
+        font-size: 1.05rem;
+      }
+      .table-scroll {
+        -webkit-overflow-scrolling: touch;
+      }
+      .results table {
+        min-width: 100%;
+        font-size: 0.82rem;
+      }
+      .results th,
+      .results td {
+        padding: 8px 10px;
+      }
+      .results th {
+        font-size: 0.72rem;
+        letter-spacing: 0.015em;
+      }
+      .results td.actions {
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chart-canvas {
+        min-height: 220px;
+      }
+      .results {
+        padding: 24px 16px 32px;
+      }
+      .range-wrap {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .range-wrap span {
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .avatar-wrap {
+        width: 180px;
+        height: 180px;
+      }
+      body.profile-editing .avatar-wrap {
+        width: 150px;
+        height: 150px;
+      }
+      .name-badge-line {
+        gap: 8px;
+      }
+      .name-badge-line .name {
+        font-size: 24px;
+      }
+      .name-badge-icon {
+        width: 28px;
+        height: 28px;
+      }
+    }
+  </style>
+  <!-- Centered deletion confirmation modal styles -->
+  <style>
+    .center-confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:3000; padding:16px; }
+    .center-confirm-overlay[hidden] { display:none; }
+    .center-confirm-modal { background:var(--surface, #ffffff); color:var(--text, #0f172a); width:min(380px, 100%); border-radius:22px; padding:22px 22px 18px; box-shadow:0 30px 60px rgba(0,0,0,0.35); border:1px solid var(--border, rgba(0,0,0,0.12)); display:flex; flex-direction:column; gap:14px; }
+    body[data-theme="theme-dark"] .center-confirm-modal { background:var(--panel,#11161f); }
+    .center-confirm-title { margin:0; font-size:20px; font-weight:700; }
+    .center-confirm-text { margin:0; font-size:14px; line-height:1.4; }
+    .center-confirm-actions { display:flex; gap:12px; justify-content:flex-end; }
+    /* Plain text buttons for confirmation modal */
+    .center-confirm-actions button { background:none; border:none; padding:0; margin:0; font:inherit; font-size:15px; font-weight:600; cursor:pointer; color:var(--accent,#1d4ed8); display:inline-block; }
+    .center-confirm-actions button:hover { text-decoration:underline; }
+    .center-confirm-actions button:focus-visible { outline:2px solid var(--accent,#1d4ed8); outline-offset:4px; border-radius:4px; }
+    #deleteConfirmBtn { color:#dc2626; }
+    #deleteConfirmBtn:hover { text-decoration:underline; }
+    @media (max-width:640px){
+      .center-confirm-modal { width:min(320px, 100%); padding:20px 18px 16px; }
+      .center-confirm-title { font-size:18px; }
+      .center-confirm-actions { justify-content:space-between; }
+    }
+    /* Mobile: hide charts & results table when editing profile */
+    @media (max-width:640px){
+      body.profile-editing .charts,
+      body.profile-editing #resultsSection,
+      body.profile-editing .results-table-wrap { display:none !important; }
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="{{ url_for('landing') }}">Home</a><span class="pipe">|</span><a href="{{ url_for('logout') }}">Logout</a>
+      </nav>
+      <div class="sidebar-content">
+        <div class="avatar-wrap">
+          <img id="avatarImg" src="{{ (avatar_url or '') if avatar_url else 'https://api.dicebear.com/9.x/thumbs/svg?seed=user' }}" alt="Avatar" />
+          <div class="avatar-action-bar" id="avatarActions">
+            <button type="button" class="avatar-btn" id="uploadAvatarBtn" title="Upload new" aria-label="Upload avatar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            </button>
+            <button type="button" class="avatar-btn danger" id="removeAvatarBtn" title="Remove avatar" aria-label="Remove avatar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14c.05.9.78 1.6 1.68 1.6h8.64c.9 0 1.63-.7 1.68-1.6L19 6"/></svg>
+            </button>
+          </div>
+          <input type="file" id="avatarFileInput" accept="image/*" />
+        </div>
+        <div class="name-badge-line">
+          <img id="viewBadgeIcon" class="name-badge-icon" alt="" loading="lazy" hidden />
+          <span class="name" id="viewName"></span>
+        </div>
+        <div class="meta-line" id="metaLine">
+          <span class="meta-item" id="viewUsername"></span>
+          <span class="meta-divider" id="metaDivider1"> </span>
+          <span class="meta-item" id="viewGender"></span>
+          <span class="meta-divider" id="metaDivider2"> </span>
+          <span class="meta-item" id="viewDob"></span>
+        </div>
+        <div class="bio" id="viewBio" style="display:none;"></div>
+        <button class="btn" id="editBtn">Edit profile</button>
+        <div class="list" id="viewList">
+          <div class="item" id="universityItem" style="display:none;">
+            <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 780 621" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="m390 86l390 156l-390 155L99 281c-18 15-31 39-33 66h7c8 0 14 6 14 14v37c0 8-6 14-14 14h-5l19 194c1 8-5 15-13 15H39c-8 0-14-7-14-15l20-194h-5c-8 0-15-6-15-14v-37c0-8 7-14 15-14h11c2-29 15-54 33-72L0 242zm-11 339l11 4l11-4l214-86l16 177c1 12-7 17-18 12l-84-43c-11-6-29-5-39 1l-81 46c-10 6-28 6-38 0l-81-46c-10-6-28-7-38-1l-85 43c-11 6-19 0-18-12l16-177z"/></svg></span>
+            <span id="viewUniversity"></span>
+          </div>
+          <div class="item" id="locationItem" style="display:none;">
+            <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M17.657 5.304c-3.124-3.073-8.189-3.073-11.313 0a7.78 7.78 0 0 0 0 11.13L12 21.999l5.657-5.565a7.78 7.78 0 0 0 0-11.13zM12 13.499c-.668 0-1.295-.26-1.768-.732a2.503 2.503 0 0 1 0-3.536c.472-.472 1.1-.732 1.768-.732s1.296.26 1.768.732a2.503 2.503 0 0 1 0 3.536c-.472.472-1.1.732-1.768.732z"/></svg></span>
+            <span id="viewLocation"></span>
+          </div>
+          <div class="item">
+            <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M40.5 31.5v-18S22.3 26.2 20.53 26.859C18.79 26.23.5 13.5.5 13.5v18c0 2.5.53 3 3 3h34c2.529 0 3-.439 3-3zm-.029-21.529c0-1.821-.531-2.471-2.971-2.471h-34c-2.51 0-3 .78-3 2.6l.03.28s18.069 12.44 20 13.12c2.04-.79 19.97-13.4 19.97-13.4l-.029-.129z"/></svg></span>
+            <a id="viewEmail" href="mailto:{{ user_email or '' }}">{{ user_email or '' }}</a>
+          </div>
+          <div class="item" id="websiteItem" style="display:none;">
+            <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 1024 1023" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M881 321q-10-2-15-2q-37 0-64 25q-61-27-114-44q-87-28-182-46q-9-24-27-40Q504 96 546 0q126 9 231.5 73T948 241q-37 40-67 80zM417 191q-26 0-49 14q-81-60-163-102Q329 9 483 0q-39 87-63 191h-3zM70 253q34-57 86-108q68 35 141 86q-129-3-227 22zm251 40q2 31 21.5 54.5T391 379q-6 70-6 133q0 44 3 101q-22 7-39 24q-54-21-104-48q11-22 11-45q0-40-28-68t-68-28q-44 0-73 34q-42-38-75-79q9-43 27-85q122-34 282-25zM65 552q3 37 30.5 62.5T160 640q11 0 24-4q64 37 137 64v4q0 39 26.5 66.5T413 800q25 122 70 223q-100-6-189-48.5T140.5 864T38 704T0 512q0-1 1-27q28 35 64 67zm436 197q72 13 145 17q7 20 22 37q-23 105-28 204q-51 13-94 16q-47-107-73-242q18-12 28-32zm310 48q13-16 18-34q73-6 141-19q-48 94-132 163q-9-52-27-110zm-163-95q-70-4-138-18q-11-50-57-69q-4-59-4-103q0-66 6-137q2 0 5-2t4-2q39 38 68 70q87 96 148 218q-22 17-32 43zm89 130q2 0 11-1q17 61 25 121q-29 17-70 34q7-78 24-155q8 1 10 1zm-5-239q-1 2-2.5 6t-2.5 6q-63-114-148-207q-31-35-74-76q1 0 1.5-1.5l.5-1.5q84 17 161 42q47 15 103 40q-2 10-2 15q0 30 18 55q-33 63-55 122zm47 58q12-35 12-36q20-50 50-107q13 4 25 4q34 0 61-23q49 34 96 76q-6 57-24 110q-82 17-173 24q-13-32-47-48zm183-236q0-33-22-60q21-27 42-49q36 82 42 169q-33-25-64-45q2-9 2-15z"/></svg></span>
+            <a id="viewWebsite" href="#" target="_blank"></a>
+          </div>
+          <div class="item" id="linkedinItem" style="display:none;">
+            <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 432 432" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M319 221.5q-8-10.5-30-10.5q-27 0-38 16t-11 45v146q0 5-3 8t-8 3h-76q-4 0-7.5-3t-3.5-8V148q0-4 3.5-7.5t7.5-3.5h74q4 0 6.5 2t3.5 6v5q1 2 1 7q28-27 76-27q53 0 83 27t30 79v182q0 5-3.5 8t-7.5 3h-78q-4 0-7.5-3t-3.5-8V254q0-22-8-32.5zM88 91.5Q73 107 51.5 107T15 91.5t-15-37T15 18T51.5 3T88 18t15 36.5t-15 37zm13 56.5v270q0 5-3.5 8t-7.5 3H14q-5 0-8-3t-3-8V148q0-4 3-7.5t8-3.5h76q4 0 7.5 3.5t3.5 7.5z"/></svg></span>
+            <a id="viewLinkedin" href="#" target="_blank"></a>
+          </div>
+          <div class="item" id="githubItem" style="display:none;">
+            <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 432 416" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M213.5 0q88.5 0 151 62.5T427 213q0 70-41 125.5T281 416q-14 2-14-11v-58q0-27-15-40q44-5 70.5-27t26.5-77q0-34-22-58q11-26-2-57q-18-5-58 22q-26-7-54-7t-53 7q-18-12-32.5-17.5T107 88h-6q-12 31-2 57q-22 24-22 58q0 55 27 77t70 27q-11 10-13 29q-42 18-62-18q-12-20-33-22q-2 0-4.5.5t-5 3.5t8.5 9q14 7 23 31q1 2 2 4.5t6.5 9.5t13 10.5T130 371t30-2v36q0 13-14 11q-64-22-105-77.5T0 213q0-88 62.5-150.5T213.5 0z"/></svg></span>
+            <a id="viewGithub" href="#" target="_blank"></a>
+          </div>
+        </div>
+        <form class="edit-card" id="editCard">
+          <div class="f"><label>Name</label><input class="input" id="nameInput" value="" /></div>
+          <div class="f">
+            <label>Username</label>
+            <input class="input" id="usernameInput" value="" />
+            <p class="input-error" id="usernameError" aria-live="polite"></p>
+          </div>
+          <div class="f"><label>Bio</label><textarea class="textarea" id="bioInput"></textarea></div>
+          <div class="f"><label>University</label><input class="input" id="univInput" value="" /></div>
+          <div class="f"><label>Location</label><input class="input" id="locInput" value="" /></div>
+          <div class="f"><label>Gender</label>
+            <select class="select" id="genderInput">
+              <option value="">Select gender</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Non-binary">Non-binary</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+          <div class="f"><label>Date of Birth</label><input class="input" id="dobInput" type="date" /></div>
+          <div class="f"><label>Website</label><input class="input" id="siteInput" placeholder="https://example.com" /></div>
+          <div class="f"><label>LinkedIn</label><input class="input" id="linkedinInput" placeholder="https://linkedin.com/in/username" /></div>
+          <div class="f"><label>GitHub</label><input class="input" id="githubInput" placeholder="https://github.com/username" /></div>
+          <div class="row-actions">
+            <button class="btn success" type="submit" id="saveBtn">Save</button>
+            <button class="btn cancel" type="button" id="cancelBtn">Cancel</button>
+          </div>
+          <button class="btn password-toggle-btn" type="button" id="passwordToggleBtn" aria-expanded="false" aria-controls="passwordSection">Change Password</button>
+          <div class="password-section" id="passwordSection" aria-label="Change password" aria-hidden="true">
+            <h3>Change password</h3>
+            <p class="hint">Update your password to keep your account secure.</p>
+            <div class="f"><label for="currentPasswordInput">Current password</label><input class="input" id="currentPasswordInput" type="password" autocomplete="current-password" /></div>
+            <div class="f"><label for="newPasswordInput">New password</label><input class="input" id="newPasswordInput" type="password" autocomplete="new-password" minlength="6" /></div>
+            <div class="f"><label for="confirmPasswordInput">Confirm new password</label><input class="input" id="confirmPasswordInput" type="password" autocomplete="new-password" minlength="6" /></div>
+            <div class="row-actions">
+              <button class="btn success" type="button" id="passwordSaveBtn">Save new password</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="main-content">
+        <section class="charts" aria-label="Performance charts">
+          <article class="chart-card chart-card--doughnut">
+            <h2 class="chart-title">Performance Distribution</h2>
+            <div class="chart-body">
+              <div class="chart-canvas">
+                <canvas id="pieChart"></canvas>
+              </div>
+              <div id="pieLegend" class="chart-legend"></div>
+            </div>
+          </article>
+          <article class="chart-card chart-card--metrics">
+            <h2 class="chart-title">Statistics</h2>
+            <div class="chart-body">
+              <div class="chart-canvas">
+                <canvas id="timeChart"></canvas>
+              </div>
+              <div class="chart-controls"></div>
+            </div>
+          </article>
+        </section>
+        <section class="results" id="resultsSection" style="display:none;" aria-label="Past results">
+          <div class="results-header">
+            <h2>Past Results</h2>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Type</th>
+                  <th>Result (%)</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Role</th>
+                  <th>Difficulty</th>
+                  <th class="questions-col">Questions</th>
+                  <th>Duration</th>
+                  <th class="actions-col" aria-label="Remove">Remove</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <tr><td colspan="10" style="text-align:center; padding:18px; color:var(--muted);">No results yet. Take an interview or quiz to see history here.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script>
+    // Sidebar edit toggle
+    const editBtn = document.getElementById("editBtn");
+    const editCard = document.getElementById("editCard");
+    const viewList = document.getElementById("viewList");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const passwordSaveBtn = document.getElementById("passwordSaveBtn");
+    const passwordToggleBtn = document.getElementById("passwordToggleBtn");
+    const passwordSection = document.getElementById("passwordSection");
+    const currentPasswordInput = document.getElementById("currentPasswordInput");
+    const newPasswordInput = document.getElementById("newPasswordInput");
+    const confirmPasswordInput = document.getElementById("confirmPasswordInput");
+    const usernameInput = document.getElementById("usernameInput");
+    const usernameError = document.getElementById("usernameError");
+    const staticBaseUrl = "{{ url_for('static', filename='') }}";
+    const dashboardLeaderboardEntry = {{ leaderboard_entry | tojson | safe }};
+    const badgeIconEl = document.getElementById("viewBadgeIcon");
+
+    function resetPasswordInputs() {
+      if (currentPasswordInput) currentPasswordInput.value = '';
+      if (newPasswordInput) newPasswordInput.value = '';
+      if (confirmPasswordInput) confirmPasswordInput.value = '';
+      if (passwordSection) {
+        passwordSection.classList.remove('is-active');
+        passwordSection.setAttribute('aria-hidden', 'true');
+      }
+      if (passwordToggleBtn) {
+        passwordToggleBtn.style.display = '';
+        passwordToggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    editBtn.onclick = () => {
+      editCard.style.display = "block";
+      viewList.style.display = "none";
+      editBtn.style.display = "none";
+      document.body.classList.add("profile-editing");
+      resetPasswordInputs();
+      if (usernameError) {
+        usernameError.textContent = '';
+        usernameError.style.display = 'none';
+      }
+    };
+    cancelBtn.onclick = () => {
+      editCard.style.display = "none";
+      viewList.style.display = "grid";
+      editBtn.style.display = "block";
+      document.body.classList.remove("profile-editing");
+      resetPasswordInputs();
+      if (usernameError) {
+        usernameError.textContent = '';
+        usernameError.style.display = 'none';
+      }
+    };
+
+    passwordToggleBtn?.addEventListener('click', () => {
+      if (!passwordSection) return;
+      passwordSection.classList.add('is-active');
+      passwordSection.setAttribute('aria-hidden', 'false');
+      passwordToggleBtn.style.display = 'none';
+      passwordToggleBtn.setAttribute('aria-expanded', 'true');
+      currentPasswordInput?.focus();
+    });
+
+    saveBtn.onclick = async (e) => {
+      e.preventDefault();
+      if (usernameError) {
+        usernameError.textContent = '';
+        usernameError.style.display = 'none';
+      }
+      const payload = {
+        name: document.getElementById("nameInput").value.trim(),
+        username: usernameInput ? usernameInput.value.trim() : '',
+        bio: document.getElementById("bioInput").value.trim(),
+        university: document.getElementById("univInput").value.trim(),
+        location: document.getElementById("locInput").value.trim(),
+        gender: document.getElementById("genderInput") ? document.getElementById("genderInput").value.trim() : '',
+        dob: document.getElementById("dobInput") ? document.getElementById("dobInput").value.trim() : '',
+        website: document.getElementById("siteInput").value.trim(),
+        linkedin: document.getElementById("linkedinInput").value.trim(),
+        github: document.getElementById("githubInput").value.trim(),
+      };
+      try {
+        const r = await fetch('/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await r.json();
+        if (!data.success) {
+          const message = data.error || 'Failed to save profile';
+          if (usernameError && message.toLowerCase().includes('username')) {
+            usernameError.textContent = message;
+            usernameError.style.display = 'block';
+            usernameInput?.focus();
+          } else {
+            alert(message);
+          }
+          return;
+        }
+        await loadProfile();
+        editCard.style.display = "none";
+        viewList.style.display = "grid";
+        editBtn.style.display = "block";
+        document.body.classList.remove("profile-editing");
+        resetPasswordInputs();
+      } catch (err) {
+        console.error(err);
+        alert('Save error');
+      }
+    };
+
+    passwordSaveBtn?.addEventListener('click', async () => {
+      const currentPassword = (currentPasswordInput?.value || '').trim();
+      const newPassword = (newPasswordInput?.value || '').trim();
+      const confirmPassword = (confirmPasswordInput?.value || '').trim();
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        alert('Please fill in all password fields.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        alert('New password and confirmation do not match.');
+        return;
+      }
+      if (newPassword.length < 6) {
+        alert('New password must be at least 6 characters long.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/change_password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+        });
+        const data = await response.json().catch(() => ({ success: false, error: 'Unexpected response.' }));
+        if (response.ok && data.success) {
+          alert('Password updated successfully.');
+          resetPasswordInputs();
+        } else {
+          alert(data.error || 'Unable to update password.');
+        }
+      } catch (error) {
+        console.error('Password update failed', error);
+        alert('Unable to update password.');
+      }
+    });
+
+    // Avatar upload/remove logic
+    const uploadBtn = document.getElementById('uploadAvatarBtn');
+    const removeBtn = document.getElementById('removeAvatarBtn');
+    const fileInput = document.getElementById('avatarFileInput');
+    const avatarImg = document.getElementById('avatarImg');
+    const placeholderAvatar = 'https://api.dicebear.com/9.x/thumbs/svg?seed=user';
+
+    uploadBtn?.addEventListener('click', () => fileInput.click());
+    fileInput?.addEventListener('change', () => {
+      if (!fileInput.files || !fileInput.files[0]) return;
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      fetch('/api/profile_picture', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            const nextUrl = data.url || (data.path ? `/static/${data.path}`.replace(/\\/g, '/') : null);
+            if (nextUrl) {
+              avatarImg.src = nextUrl;
+            }
+          } else {
+            console.error('Upload failed', data);
+            alert(data.error || 'Upload failed');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Upload error');
+        });
+    });
+
+    removeBtn?.addEventListener('click', () => {
+      fetch('/api/profile_picture', { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            avatarImg.src = placeholderAvatar;
+          } else {
+            alert(data.error || 'Failed to remove avatar');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Remove error');
+        });
+    });
+
+    // Charts with theme-aware colors
+    const styles = getComputedStyle(document.body);
+    const initialText = styles.getPropertyValue('--text').trim() || '#c9d1d9';
+    const chart1 = styles.getPropertyValue('--chart-1').trim() || styles.getPropertyValue('--accent').trim() || '#58a6ff';
+    const chart2 = styles.getPropertyValue('--chart-2').trim() || styles.getPropertyValue('--success').trim() || '#2ea043';
+
+    const pieCtx = document.getElementById('pieChart');
+    const timeCtx = document.getElementById('timeChart');
+  const metricLabels = ['Total Sessions', 'Average Score', 'Total Time Till Now', 'Improvement Delta', 'Sessions Per Week', 'Avg Difficulty'];
+    let resultsCache = [];
+    const metricsState = {
+      totalSessions: 0,
+      averageScore: 0,
+      totalTimeMinutes: 0,
+      improvementDelta: 0,
+      sessionsPerWeek: 0,
+      avgDifficulty: 0
+    };
+
+    function formatMetricValue(label, value) {
+      if (!Number.isFinite(value)) return '0';
+      switch (label) {
+        case 'Total Sessions':
+          return `${Math.round(value)}`;
+        case 'Average Score':
+          return `${value.toFixed(1)}%`;
+        case 'Total Time Till Now':
+          return `${value.toFixed(1)} min`;
+        case 'Improvement Delta': {
+          const sign = value > 0 ? '+' : '';
+          return `${sign}${value.toFixed(1)}%`;
+        }
+        case 'Sessions Per Week':
+          return `${Math.round(value)}`;
+        case 'Avg Difficulty':
+          return `${value.toFixed(1)}`;
+        default:
+          return `${value.toFixed(1)}`;
+      }
+    }
+
+    function formatDuration(raw) {
+      if (raw == null || (typeof raw === 'string' && raw.trim() === '')) return '';
+      if (typeof raw === 'string' && raw.includes(':')) return raw;
+      const minutes = Number(raw);
+      if (!Number.isFinite(minutes)) return String(raw);
+      if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        const parts = [];
+        if (hours > 0) parts.push(`${hours}h`);
+        if (mins > 0) parts.push(`${mins}m`);
+        return parts.length ? parts.join(' ') : '0m';
+      }
+      return `${Math.round(minutes)}m`;
+    }
+
+    function getMetricValues() {
+      return [
+        metricsState.totalSessions,
+        metricsState.averageScore,
+        metricsState.totalTimeMinutes,
+        metricsState.improvementDelta,
+        metricsState.sessionsPerWeek,
+        metricsState.avgDifficulty
+      ];
+    }
+
+    const barValuePlugin = {
+      id: 'ivBarValues',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const cs = getComputedStyle(document.body);
+        const textColor = (cs.getPropertyValue('--text') || '#c9d1d9').trim();
+        ctx.save();
+        ctx.font = '700 13px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        ctx.fillStyle = textColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const ds = chart.getDatasetMeta(0);
+        if (!ds) {
+          ctx.restore();
+          return;
+        }
+        const rawValues = chart.data.datasets?.[0]?.rawValues;
+        ds.data.forEach((bar, index) => {
+          const label = chart.data.labels?.[index] || '';
+          const rawValue = Array.isArray(rawValues) ? rawValues[index] : chart.data.datasets?.[0]?.data?.[index];
+          const value = chart.data.datasets?.[0]?.data?.[index];
+          if (!bar || !Number.isFinite(value) || !Number.isFinite(rawValue)) return;
+          const display = formatMetricValue(label, Number(rawValue));
+          // Always position label just above the visible top of the bar
+          const yPos = bar.y;
+          ctx.fillText(display, bar.x, yPos - 6);
+        });
+        ctx.restore();
+      }
+    };
+    Chart.register(barValuePlugin);
+
+    function updateMetricsChart(mode) {
+      if (!timeChart) return;
+      timeChart.data.labels = metricLabels;
+      const originalValues = getMetricValues();
+      timeChart.data.datasets[0].rawValues = originalValues.slice();
+      timeChart.data.datasets[0].data = originalValues.map((value, idx) => {
+        const label = timeChart.data.labels?.[idx];
+        return label === 'Improvement Delta' && Number.isFinite(value) && value < 0 ? 0 : value;
+      });
+      const yScale = timeChart.options.scales?.y;
+      if (yScale) {
+        yScale.suggestedMin = 0;
+        if (yScale.ticks) yScale.ticks.min = 0;
+      }
+      applyBarChartResponsiveness(mode || 'none', true);
+      timeChart.update(mode);
+    }
+
+    // Derive interview KPIs for the dashboard bar chart.
+    function recomputeMetricsFromResults(list) {
+      resultsCache = Array.isArray(list) ? list : [];
+      metricsState.totalSessions = resultsCache.length;
+
+      const scoreValues = resultsCache
+        .map(row => Number(row.score))
+        .filter(val => Number.isFinite(val));
+      const avgScore = scoreValues.length
+        ? scoreValues.reduce((sum, val) => sum + val, 0) / scoreValues.length
+        : 0;
+      metricsState.averageScore = Number(avgScore.toFixed(1));
+
+      const scoredRows = resultsCache
+        .map((row, index) => {
+          const score = Number(row.score);
+          const order = Number(row.sno);
+          const dateValue = row.date ? Date.parse(row.date) : NaN;
+          return { score, order, dateValue, index };
+        })
+        .filter(item => Number.isFinite(item.score));
+      if (scoredRows.length >= 2) {
+        scoredRows.sort((a, b) => {
+          const aHasDate = Number.isFinite(a.dateValue);
+          const bHasDate = Number.isFinite(b.dateValue);
+          if (aHasDate && bHasDate && a.dateValue !== b.dateValue) {
+            return a.dateValue - b.dateValue;
+          }
+          const aOrder = Number.isFinite(a.order) ? a.order : NaN;
+          const bOrder = Number.isFinite(b.order) ? b.order : NaN;
+          if (Number.isFinite(aOrder) && Number.isFinite(bOrder) && aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+          return a.index - b.index;
+        });
+        const firstScore = scoredRows[0].score;
+        const lastScore = scoredRows[scoredRows.length - 1].score;
+        metricsState.improvementDelta = Number((lastScore - firstScore).toFixed(1));
+      } else {
+        metricsState.improvementDelta = 0;
+      }
+
+      const nowTs = Date.now();
+      const weekMs = 7 * 24 * 60 * 60 * 1000;
+      let hasValidDate = false;
+      const sessionsLastWeek = resultsCache.reduce((count, row) => {
+        const parsed = row?.date ? Date.parse(row.date) : NaN;
+        if (Number.isFinite(parsed)) {
+          hasValidDate = true;
+          if (parsed >= nowTs - weekMs && parsed <= nowTs + 24 * 60 * 60 * 1000) {
+            return count + 1;
+          }
+        }
+        return count;
+      }, 0);
+      metricsState.sessionsPerWeek = hasValidDate ? sessionsLastWeek : metricsState.totalSessions;
+
+      const difficultyMap = { easy: 1, medium: 2, hard: 3 };
+      const difficultyValues = resultsCache
+        .map(row => {
+          const raw = (row?.difficulty || '').toString().trim().toLowerCase();
+          if (!raw) return NaN;
+          if (raw in difficultyMap) return difficultyMap[raw];
+          const parsed = Number(raw);
+          return Number.isFinite(parsed) ? parsed : NaN;
+        })
+        .filter(val => Number.isFinite(val));
+      const avgDifficulty = difficultyValues.length
+        ? difficultyValues.reduce((sum, val) => sum + val, 0) / difficultyValues.length
+        : 0;
+      metricsState.avgDifficulty = Number(avgDifficulty.toFixed(1));
+
+      updateMetricsChart();
+    }
+
+    function applyTotalTimeFromSeries(series) {
+      const totalSeconds = (Array.isArray(series) ? series : []).reduce((acc, value) => acc + (Number(value) || 0), 0);
+      const totalMinutes = totalSeconds / 60;
+      metricsState.totalTimeMinutes = Number(totalMinutes.toFixed(1));
+      updateMetricsChart();
+    }
+
+    function hexToRgba(hex, alpha) {
+      try {
+        const h = hex.replace('#', '').trim();
+        const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `rgba(${r},${g},${b},${alpha})`;
+      } catch {
+        return hex;
+      }
+    }
+
+    function computePieGradients() {
+      const ctx = pieCtx.getContext('2d');
+      const cs = getComputedStyle(document.body);
+      const c1 = (cs.getPropertyValue('--chart-1') || cs.getPropertyValue('--accent') || '#58a6ff').trim();
+      const c2 = (cs.getPropertyValue('--chart-2') || cs.getPropertyValue('--success') || '#2ea043').trim();
+      const g1 = ctx.createLinearGradient(0, 0, 0, pieCtx.height);
+      g1.addColorStop(0, hexToRgba(c1, 0.95));
+      g1.addColorStop(1, hexToRgba(c1, 0.65));
+      const g2 = ctx.createLinearGradient(0, 0, 0, pieCtx.height);
+      g2.addColorStop(0, hexToRgba(c2, 0.95));
+      g2.addColorStop(1, hexToRgba(c2, 0.65));
+      return [g1, g2];
+    }
+
+    const clearDoughnutCenterPlugin = {
+      id: 'ivClearCenter',
+      afterDatasetsDraw(chart) {
+        const arc = chart.getDatasetMeta(0)?.data?.[0];
+        if (!arc) return;
+        const { ctx } = chart;
+        const { x, y, innerRadius } = arc;
+        if (!innerRadius) return;
+        const host = chart.canvas.closest('.chart-card') || document.body;
+        const fill = getComputedStyle(host).getPropertyValue('--panel')?.trim() || getComputedStyle(document.body).getPropertyValue('--panel')?.trim() || '#0d1117';
+        ctx.save();
+        ctx.fillStyle = fill;
+        ctx.beginPath();
+        ctx.arc(x, y, innerRadius - 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    };
+    Chart.register(clearDoughnutCenterPlugin);
+
+    const pie = pieCtx ? new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Quiz', 'Interview'],
+        datasets: [{
+          data: [0, 0],
+          backgroundColor: [chart1, chart2],
+          hoverOffset: 10,
+          spacing: 3,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        animation: { animateRotate: true, animateScale: true, duration: 1200, easing: 'easeOutQuart' },
+        layout: { padding: 6 },
+        elements: { arc: { borderRadius: 6 } },
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+      }
+    }) : null;
+    renderPieLegend();
+
+    const timeChart = timeCtx ? new Chart(timeCtx, {
+      type: 'bar',
+      data: {
+        labels: metricLabels,
+        datasets: [{
+          label: 'Metrics',
+          data: getMetricValues(),
+          borderColor: chart1,
+          backgroundColor: chart1,
+          borderWidth: 0,
+          borderRadius: 8,
+          maxBarThickness: 90,
+          barThickness: 80,
+          categoryPercentage: 0.6,
+          barPercentage: 0.7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 140,
+            suggestedMin: 0,
+            grid: {
+              display: false,
+              drawBorder: false
+            },
+            ticks: {
+              color: initialText,
+              stepSize: 20,
+              callback(value) {
+                return value <= 140 ? value : '';
+              }
+            }
+          },
+          x: {
+            ticks: { color: initialText },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      }
+    }) : null;
+
+    function applyBarChartResponsiveness(updateMode = 'none', skipUpdate = false) {
+      if (!timeChart) return;
+      const ds = timeChart.data?.datasets?.[0];
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (ds) {
+        if (isMobile) {
+          ds.maxBarThickness = 44;
+          ds.barThickness = 36;
+        } else {
+          ds.maxBarThickness = 90;
+          ds.barThickness = 80;
+        }
+      }
+      const xTicks = timeChart.options?.scales?.x?.ticks;
+      if (xTicks) {
+        if (isMobile) {
+          xTicks.maxRotation = 30;
+          xTicks.minRotation = 15;
+        } else {
+          xTicks.maxRotation = 0;
+          xTicks.minRotation = 0;
+        }
+      }
+      if (!skipUpdate) {
+        timeChart.update(updateMode);
+      }
+    }
+
+    function applyThemeToCharts() {
+      const cs = getComputedStyle(document.body);
+      const t = (cs.getPropertyValue('--text') || initialText).trim();
+      const c1 = (cs.getPropertyValue('--chart-1') || chart1).trim();
+      const c2 = (cs.getPropertyValue('--chart-2') || chart2).trim();
+      if (pie && timeChart) {
+        pie.data.datasets[0].backgroundColor = [c1, c2];
+        timeChart.data.datasets[0].borderColor = c1;
+        timeChart.data.datasets[0].backgroundColor = c1;
+        timeChart.data.datasets[0].borderWidth = 0;
+        if (timeChart.options.scales && timeChart.options.scales.x && timeChart.options.scales.y) {
+          timeChart.options.scales.x.ticks.color = t;
+          timeChart.options.scales.y.ticks.color = t;
+          timeChart.options.scales.y.ticks.callback = (value) => (value <= 140 ? value : '');
+          timeChart.options.scales.y.max = 140;
+          timeChart.options.scales.y.suggestedMin = 0;
+          if (timeChart.options.scales.y.grid) {
+            timeChart.options.scales.y.grid.display = false;
+            timeChart.options.scales.y.grid.drawBorder = false;
+          }
+        }
+        pie.update('none');
+        renderPieLegend();
+        updateMetricsChart('none');
+      }
+    }
+
+    document.addEventListener('iv-theme-change', () => {
+      applyThemeToCharts();
+    });
+
+    async function loadProfile() {
+      try {
+        const r = await fetch('/api/profile');
+        const data = await r.json();
+        if (data.success && data.profile) {
+          const p = data.profile;
+          document.getElementById("nameInput").value = p.name || '';
+          document.getElementById("usernameInput").value = p.username || '';
+          document.getElementById("bioInput").value = p.bio || '';
+          document.getElementById("univInput").value = p.university || '';
+          document.getElementById("locInput").value = p.location || '';
+          const genderInput = document.getElementById("genderInput");
+          if (genderInput) {
+            genderInput.value = p.gender || '';
+          }
+          const dobInput = document.getElementById("dobInput");
+          if (dobInput) {
+            dobInput.value = p.dob || '';
+          }
+          document.getElementById("siteInput").value = p.website || '';
+          document.getElementById("linkedinInput").value = p.linkedin || '';
+          document.getElementById("githubInput").value = p.github || '';
+          if (p.avatar_url) {
+            avatarImg.src = p.avatar_url;
+          }
+          if (usernameError) {
+            usernameError.textContent = '';
+            usernameError.style.display = 'none';
+          }
+          applyProfileToView(p);
+          applyLeaderboardBadge();
+        }
+      } catch (err) {
+        console.error('Profile load failed', err);
+      }
+    }
+
+    function applyLeaderboardBadge() {
+      if (!badgeIconEl) return;
+      const entry = dashboardLeaderboardEntry || null;
+      const rawAsset = entry && typeof entry.badge_asset === 'string' ? entry.badge_asset : '';
+      const assetText = rawAsset.trim();
+      const rawLabel = entry && typeof entry.badge_label === 'string' ? entry.badge_label : '';
+      const labelText = rawLabel.trim();
+      const hasAsset = assetText.length > 0;
+
+      if (badgeIconEl) {
+        if (hasAsset) {
+          const sanitizedAsset = assetText.replace(/^\/+/, '');
+          if (sanitizedAsset) {
+            badgeIconEl.src = `${staticBaseUrl}${sanitizedAsset}`;
+            badgeIconEl.alt = `${labelText || 'Leaderboard'} badge`;
+            badgeIconEl.hidden = false;
+          } else {
+            badgeIconEl.hidden = true;
+            badgeIconEl.removeAttribute('src');
+            badgeIconEl.alt = '';
+          }
+        } else {
+          badgeIconEl.hidden = true;
+          badgeIconEl.removeAttribute('src');
+          badgeIconEl.alt = '';
+        }
+      }
+    }
+
+    function applyProfileToView(p) {
+      const nameEl = document.getElementById("viewName");
+      if (nameEl) nameEl.textContent = (p.name || '').trim();
+      const usernameEl = document.getElementById("viewUsername");
+      if (usernameEl) {
+        const usernameText = (p.username || '').trim();
+        usernameEl.textContent = usernameText;
+        usernameEl.style.display = usernameText ? 'inline' : 'none';
+      }
+      const bioEl = document.getElementById("viewBio");
+      if (bioEl) {
+        const bioText = (p.bio || '').trim();
+        bioEl.textContent = bioText;
+        bioEl.style.display = bioText ? 'block' : 'none';
+      }
+      const univItem = document.getElementById("universityItem");
+      const univEl = document.getElementById("viewUniversity");
+      if (univEl && univItem) {
+        const univText = (p.university || '').trim();
+        univEl.textContent = univText;
+        univItem.style.display = univText ? 'flex' : 'none';
+      }
+      const locItem = document.getElementById("locationItem");
+      const locEl = document.getElementById("viewLocation");
+      if (locEl && locItem) {
+        const locText = (p.location || '').trim();
+        locEl.textContent = locText;
+        locItem.style.display = locText ? 'flex' : 'none';
+      }
+      const genderEl = document.getElementById("viewGender");
+      const dobEl = document.getElementById("viewDob");
+      const genderText = (p.gender || '').trim();
+      const dobText = (p.dob || '').trim();
+      if (genderEl) {
+        genderEl.textContent = genderText;
+        genderEl.style.display = genderText ? 'inline' : 'none';
+      }
+      if (dobEl) {
+        dobEl.textContent = dobText;
+        dobEl.style.display = dobText ? 'inline' : 'none';
+      }
+      const metaLine = document.getElementById("metaLine");
+      if (metaLine) {
+        const items = [usernameEl, genderEl, dobEl];
+        const dividers = [
+          document.getElementById("metaDivider1"),
+          document.getElementById("metaDivider2"),
+        ];
+        const visibleFlags = items.map((el) => Boolean(el && el.style.display !== 'none'));
+        const visibleSegments = visibleFlags.filter(Boolean).length;
+        dividers.forEach((divider, idx) => {
+          if (!divider) return;
+          const currentVisible = visibleFlags[idx + 1];
+          const prevVisible = visibleFlags.slice(0, idx + 1).some(Boolean);
+          divider.style.display = currentVisible && prevVisible ? 'inline' : 'none';
+        });
+        metaLine.style.display = visibleSegments ? 'flex' : 'none';
+      }
+      if (p.email) {
+        const e = document.getElementById('viewEmail');
+        if (e) {
+          e.textContent = p.email;
+          e.href = `mailto:${p.email}`;
+        }
+      }
+      const siteItem = document.getElementById("websiteItem");
+      if (siteItem) {
+        if (p.website) {
+          siteItem.style.display = "flex";
+          const s = document.getElementById("viewWebsite");
+          if (s) {
+            s.href = p.website;
+            s.textContent = p.website;
+          }
+        } else {
+          siteItem.style.display = "none";
+        }
+      }
+      const linkedinItem = document.getElementById("linkedinItem");
+      if (linkedinItem) {
+        if (p.linkedin) {
+          linkedinItem.style.display = "flex";
+          const l = document.getElementById("viewLinkedin");
+          if (l) {
+            l.href = p.linkedin;
+            l.textContent = p.linkedin;
+          }
+        } else {
+          linkedinItem.style.display = "none";
+        }
+      }
+      const githubItem = document.getElementById("githubItem");
+      if (githubItem) {
+        if (p.github) {
+          githubItem.style.display = "flex";
+          const g = document.getElementById("viewGithub");
+          if (g) {
+            g.href = p.github;
+            g.textContent = p.github;
+          }
+        } else {
+          githubItem.style.display = "none";
+        }
+      }
+    }
+
+    applyThemeToCharts();
+    applyLeaderboardBadge();
+    const mobileChartMedia = window.matchMedia('(max-width: 768px)');
+    if (typeof mobileChartMedia.addEventListener === 'function') {
+      mobileChartMedia.addEventListener('change', () => applyBarChartResponsiveness());
+    } else if (typeof mobileChartMedia.addListener === 'function') {
+      mobileChartMedia.addListener(() => applyBarChartResponsiveness());
+    }
+    loadProfile();
+    loadResults();
+    initTimeTracking();
+    loadTimeData(30);
+
+    async function loadResults() {
+      try {
+        const r = await fetch('/api/results');
+        const data = await r.json();
+        if (!data.success) return;
+        const list = data.results || [];
+        const body = document.getElementById('resultsBody');
+        const resultsSection = document.getElementById('resultsSection');
+        recomputeMetricsFromResults(list);
+        body.innerHTML = '';
+        if (list.length === 0) {
+          body.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:18px; color:var(--muted);">No results yet. Take an interview or quiz to see history here.</td></tr>';
+          if (resultsSection) {
+            resultsSection.style.display = 'flex';
+          }
+          updateCharts();
+          return;
+        }
+        if (resultsSection) {
+          resultsSection.style.display = 'flex';
+        }
+        list.forEach(row => {
+          const questionListRaw = Array.isArray(row.questions) ? row.questions : [];
+          const questionList = questionListRaw.map(q => {
+            if (!q) return '';
+            if (typeof q === 'string') return q;
+            if (typeof q === 'object' && 'question' in q) return q.question;
+            try {
+              return JSON.stringify(q);
+            } catch (err) {
+              return String(q);
+            }
+          }).filter(Boolean);
+          const scorePct = (row.score != null) ? Math.round(row.score) : '-';
+          const questionCount = questionList.length;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.sno}</td>
+            <td>${row.type}</td>
+            <td>${scorePct}%</td>
+            <td>${row.date}</td>
+            <td>${row.time || ''}</td>
+            <td>${row.role || ''}</td>
+            <td>${row.difficulty || ''}</td>
+            <td class="questions-col">${questionCount}</td>
+            <td>${formatDuration(row.duration)}</td>
+            <td class="actions">
+              <button class="action-btn action-btn-remove" type="button" data-delete-result data-result-id="${row.id}" aria-label="Remove result" title="Remove result">Delete</button>
+            </td>`;
+          const questionCell = tr.children[7];
+          if (questionCell) {
+            questionCell.title = questionList.join('\n');
+          }
+          body.appendChild(tr);
+        });
+        attachResultRowHandlers();
+        updateCharts();
+      } catch (err) {
+        console.error('Results load failed', err);
+      }
+    }
+
+    function updateCharts() {
+      if (pie) {
+        const rows = Array.from(document.querySelectorAll('#resultsBody tr'));
+        let quiz = 0;
+        let interview = 0;
+        rows.forEach(r => {
+          const cells = r.querySelectorAll('td');
+          if (cells.length >= 2) {
+            const type = cells[1].textContent.trim().toLowerCase();
+            if (type === 'quiz') quiz++;
+            else if (type === 'interview') interview++;
+          }
+        });
+        pie.data.datasets[0].data = [quiz, interview];
+        pie.update();
+        renderPieLegend();
+      }
+    }
+
+    function attachResultRowHandlers() {
+      document.querySelectorAll('[data-delete-result]').forEach(btn => {
+        btn.removeEventListener('click', onDeleteResult);
+        btn.addEventListener('click', onDeleteResult);
+      });
+    }
+
+    async function onDeleteResult(event) {
+      const btn = event.currentTarget;
+      const id = btn?.dataset?.resultId;
+      if (!id) return;
+      showResultDeleteModal(id, btn);
+    }
+
+    let pendingDeleteId = null;
+    let pendingDeleteBtn = null;
+    function showResultDeleteModal(id, btn){
+      pendingDeleteId = id;
+      pendingDeleteBtn = btn;
+      const overlay = document.getElementById('resultDeleteOverlay');
+      if(!overlay){
+        // fallback
+        if (confirm('Delete this result? This action cannot be undone.')) {
+          performDelete();
+        }
+        return;
+      }
+      overlay.hidden = false;
+      const yesBtn = document.getElementById('deleteConfirmBtn');
+      const cancelBtn = document.getElementById('deleteCancelBtn');
+      if (yesBtn) yesBtn.focus();
+    }
+
+    async function performDelete(){
+      const id = pendingDeleteId;
+      const btn = pendingDeleteBtn;
+      if(!id || !btn) return;
+      const defaultLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+      const overlay = document.getElementById('resultDeleteOverlay');
+      try {
+        const resp = await fetch(`/api/results/${id}`, { method: 'DELETE' });
+        const data = await resp.json().catch(() => ({ success: false, error: 'Unexpected response.' }));
+        if (resp.ok && data.success) {
+          loadResults();
+        } else {
+          alert(data.error || 'Unable to delete result.');
+        }
+      } catch(err){
+        console.error('Delete failed', err);
+        alert('Unable to delete result.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = defaultLabel;
+        pendingDeleteId = null;
+        pendingDeleteBtn = null;
+        if(overlay) overlay.hidden = true;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const yesBtn = document.getElementById('deleteConfirmBtn');
+      const cancelBtn = document.getElementById('deleteCancelBtn');
+      if (yesBtn) {
+        yesBtn.addEventListener('click', performDelete);
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          const overlay = document.getElementById('resultDeleteOverlay');
+          if (overlay) overlay.hidden = true;
+          pendingDeleteId = null;
+          pendingDeleteBtn = null;
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const overlay = document.getElementById('resultDeleteOverlay');
+          if (!overlay || overlay.hidden) return;
+          overlay.hidden = true;
+          pendingDeleteId = null; pendingDeleteBtn = null;
+        }
+      });
+    });
+
+    function renderPieLegend() {
+      const legend = document.getElementById('pieLegend');
+      if (!legend || !pie) return;
+      const labels = pie.data.labels || [];
+      const data = (pie.data.datasets && pie.data.datasets[0] && pie.data.datasets[0].data) ? pie.data.datasets[0].data : [];
+      const cs = getComputedStyle(document.body);
+      const c1 = (cs.getPropertyValue('--chart-1') || cs.getPropertyValue('--accent') || '#58a6ff').trim();
+      const c2 = (cs.getPropertyValue('--chart-2') || cs.getPropertyValue('--success') || '#2ea043').trim();
+      const total = data.reduce((a, b) => a + (Number(b) || 0), 0);
+      let html = '';
+      for (let i = 0; i < labels.length; i++) {
+        const count = Number(data[i]) || 0;
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        const color = i === 0 ? c1 : c2;
+        html += `<div class="legend-item"><span class="swatch" style="background:${color}"></span><span class="label">${labels[i]}</span><span class="value"><strong>${count}</strong><span style="color:var(--muted)">(${pct}%)</span></span></div>`;
+      }
+      legend.innerHTML = html;
+    }
+
+    async function loadTimeData(days) {
+      const rangeDays = Number.isFinite(days) && days > 0 ? Math.min(Math.round(days), 365) : 30;
+      try {
+        const r = await fetch(`/api/time_stats?days=${rangeDays}`);
+        const data = await r.json();
+        if (!data.success) {
+          applyTotalTimeFromSeries([]);
+          return;
+        }
+        applyTotalTimeFromSeries(data.series || []);
+      } catch (e) {
+        console.warn('Time data load failed', e);
+        applyTotalTimeFromSeries([]);
+      }
+    }
+
+    function initTimeTracking() {
+      if (!document.visibilityState) return;
+      let interval = null;
+      const PERIOD = 15;
+      const start = () => {
+        if (interval) return;
+        interval = setInterval(() => {
+          fetch('/api/time_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seconds: PERIOD }) })
+            .then(r => { if (r.status === 401) stop(); })
+            .catch(() => {});
+        }, PERIOD * 1000);
+      };
+      const stop = () => {
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+      };
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') start();
+        else stop();
+      });
+      if (document.visibilityState === 'visible') start();
+      window.addEventListener('beforeunload', () => stop());
+    }
+  </script>
+  <!-- Centered deletion confirmation modal markup -->
+  <div id="resultDeleteOverlay" class="center-confirm-overlay" hidden>
+    <div class="center-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+      <h3 id="deleteModalTitle" class="center-confirm-title">Delete Result</h3>
+      <p class="center-confirm-text">Delete this result? This action cannot be undone.</p>
+      <div class="center-confirm-actions">
+        <button type="button" class="delete-cancel-btn" id="deleteCancelBtn">Cancel</button>
+        <button type="button" class="delete-confirm-btn" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
