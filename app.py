@@ -316,7 +316,7 @@ OAUTH_PROVIDERS = _register_oauth_clients()
 # Serve favicon.ico (browsers request this path automatically) by redirecting to existing PNG
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static', 'assets'), 'favicon.png')
+    return send_from_directory(os.path.join(app.root_path, 'static', 'assets'), 'favicon.ico')
 
 # Store user sessions 
 user_sessions = {}
