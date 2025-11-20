@@ -243,8 +243,9 @@ def _avatar_url_for(profile_pic_value, user_id, *, cache_bust=False):
     return f"/static/{value}".replace('\\', '/')
 
 # Configure SQLite database (auto-created)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db_path = os.path.join(app.root_path, 'users.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
