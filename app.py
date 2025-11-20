@@ -269,7 +269,6 @@ db = SQLAlchemy(app)
 # db_path = os.path.join(app.root_path, 'users.db')
 # app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
 oauth = OAuth(app)
