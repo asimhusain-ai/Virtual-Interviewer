@@ -243,9 +243,8 @@ def _avatar_url_for(profile_pic_value, user_id, *, cache_bust=False):
     return f"/static/{value}".replace('\\', '/')
 
 # Configure SQLite database (auto-created)
-db_path = os.path.join(app.root_path, 'users.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -1568,7 +1567,7 @@ _verify_otp_form = """
                                 <path d="M17 17h0"></path>
                             </svg>
                         </span>
-                        <input class="auth-input" type="text" name="otp" id="verifyOtp" maxlength="6" minlength="6" pattern="\d{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="Enter 6-digit code" required />
+                        <input class="auth-input" type="text" name="otp" id="verifyOtp" maxlength="6" minlength="6" pattern="\\d{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="Enter 6-digit code" required />
                     </div>
                 </div>
                 <div class="auth-actions">
