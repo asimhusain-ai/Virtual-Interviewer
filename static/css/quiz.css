@@ -92,6 +92,7 @@ body.theme-dark .quiz-timeout-note {
 .quiz-questions {
   display: flex;
   flex-direction: column;
+  /* gap: clamp(10px, 3vw, 18px); */
   padding-left: 30px;
 }
 
@@ -170,7 +171,7 @@ body.theme-dark .quiz-option:hover {
   .quiz-shell {
     width: min(388px, calc(100% - 20px));
     margin: 0 auto 0 -12px;
-    padding: 4px 36px 4px 6px;
+    padding: 4px 36px 4px 6px; /* tighter vertical padding + reduced gaps on both sides */
     gap: 0;
     box-shadow: none;
     border: 1px solid rgba(148, 163, 184, 0.18);
@@ -187,11 +188,11 @@ body.theme-dark .quiz-option:hover {
   }
 
   .quiz-title {
-    font-size: clamp(23px, 6vw, 28px);
+    font-size: clamp(23px, 6vw, 28px); /* approx 5px smaller */
   }
 
   .quiz-meta {
-    display: none;
+    display: none; /* hide difficulty/questions summary on mobile */
   }
 
   .quiz-timer {
@@ -210,7 +211,7 @@ body.theme-dark .quiz-option:hover {
   .quiz-card {
     width: min(320px, calc(100% - 36px));
     margin: 0 auto;
-    padding: 6px 16px 0;
+    padding: 6px 16px 0; /* further reduce space before submit button */
   }
 
   body.theme-dark .quiz-card {
@@ -220,8 +221,8 @@ body.theme-dark .quiz-option:hover {
   }
 
   .quiz-question {
-    font-size: 16px;
-    margin: 0 0 2px;
+    font-size: 16px; /* 18px - 5px */
+    margin: 0 0 2px; /* tighter gap above options */
   }
 
   .quiz-options {
@@ -245,22 +246,22 @@ body.theme-dark .quiz-option:hover {
   }
 
   .quiz-nav {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+    display: flex;            /* ensure flex context */
+    flex-direction: row;      /* force horizontal */
+    flex-wrap: nowrap;        /* prevent wrapping */
     justify-content: space-between;
     align-items: center;
     padding: 0 6px;
     width: 100%;
     gap: 8px;
-    position: relative;
+    position: relative; /* allow absolute centering of submit on mobile */
   }
 
   #prev-question-btn,
   #next-question-btn {
     flex: 1 1 0;
-    display: block;
-    white-space: nowrap;
+    display: block; /* avoid inline quirks */
+    white-space: nowrap; /* prevent line breaks */
   }
 
   #prev-question-btn {
@@ -271,6 +272,7 @@ body.theme-dark .quiz-option:hover {
     text-align: right;
   }
 
+  /* Center submit without affecting Previous/Next layout */
   .quiz-submit-center {
     position: absolute;
     left: 50%;
@@ -296,12 +298,13 @@ body.theme-dark .quiz-option:hover {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 0 100px;
-  position: relative;
+  padding: 0 100px; /* move nav text 20px inward toward center */
+  position: relative; /* allow absolute centering of submit button */
 }
 
+/* Reserve vertical space so showing/hiding the Submit button doesn't change card height */
 .quiz-nav {
-  min-height: 56px;
+  min-height: 56px; /* reserve space for nav controls including the submit button */
 }
 
 .quiz-nav .goo-button {
@@ -309,8 +312,9 @@ body.theme-dark .quiz-option:hover {
   padding-inline: 18px;
 }
 
+/* simple text links for prev/next */
 .quiz-nav-text {
-  color: #111827;
+  color: #111827; /* near-black for light theme */
   cursor: pointer;
   font-weight: 500;
   user-select: none;
@@ -318,37 +322,41 @@ body.theme-dark .quiz-option:hover {
   display: inline-block;
 }
 body.theme-dark .quiz-nav-text {
-  color: #f1f5f9;
+  color: #f1f5f9; /* near-white */
 }
 .quiz-nav-text:hover, .quiz-nav-text:focus-visible {
-  text-decoration: none;
+  text-decoration: none; /* remove underline */
   transform: scale(1.08);
 }
 .quiz-nav-text:active {
   transform: scale(0.95);
 }
 
+/* right side wrapper to group Next + Submit inline */
 .quiz-nav-right {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
+/* Ensure submit button size is fixed so toggling visibility won't shift layout */
 .quiz-nav-right .goo-button {
   min-width: 140px;
   height: 40px;
   padding: 8px 14px;
-  display: inline-flex;
+  display: inline-flex; /* keep logical inline-flex so JS show/hide still works */
   align-items: center;
   justify-content: center;
 }
 
+/* Ensure the quiz submit button rule overrides the more general .quiz-nav .goo-button rule */
 .quiz-nav .quiz-submit-center {
   min-width: 105px;
   padding-inline: 8px;
   height: 39px;
 }
 
+/* lock state after submit-confirm: disable interactions */
 .quiz-shell.quiz-locked .quiz-option {
   cursor: default;
 }
@@ -357,6 +365,7 @@ body.theme-dark .quiz-nav-text {
   opacity: 0.85;
 }
 
+/* Confirmation overlay */
 .confirm-overlay {
   position: fixed;
   inset: 0;
@@ -409,11 +418,13 @@ body.theme-dark .confirm-text {
   to { opacity: 1 }
 }
 
+/* Rich result visualization */
 .quiz-result-rich {
   background: transparent;
   color: inherit;
   padding: 0;
 }
+/* position container so download button can be absolutely placed */
 .quiz-result-rich {
   position: relative;
 }
@@ -426,9 +437,9 @@ body.theme-dark .confirm-text {
 @media (max-width: 640px) {
   .result-wrap { grid-template-columns: 1fr; }
 }
-
+/* Pie chart (full, not donut) */
 .result-pie {
-  --p: 0; 
+  --p: 0; /* percent 0-100 */
   width: 180px;
   height: 180px;
   border-radius: 50%;
@@ -440,6 +451,9 @@ body.theme-dark .confirm-text {
 }
 .result-pie:hover { transform: scale(1.03); }
 .result-percent-badge {
+  /* show percentage as plain text that inherits theme color
+     Removed rounded bg and shadow so the percent reads cleanly
+     against the pie; keep strong weight for emphasis. */
   background: transparent;
   color: #0f172a;
   padding: 0;
@@ -483,6 +497,7 @@ body.theme-dark .stat-card {
 .stat-bad { color: #ef4444; }
 .stat-total { color: #1d4ed8; }
 
+/* Download button styles placed on the result card */
 .result-download-btn {
   position: absolute;
   right: 15px;
@@ -498,11 +513,12 @@ body.theme-dark .stat-card {
 .result-download-btn svg { display: block; width: 20px; height: 20px; }
 .result-download-btn:hover, .result-download-btn:focus { transform: scale(1.08); outline: none; }
 
+/* Summary button styling */
 .result-summary-btn {
   position: absolute;
-  right: 60px;
+  right: 60px; /* sit to the left of download button */
   bottom: 2.5px;
-  background: transparent;
+  background: transparent; /* icon-only button */
   color: inherit;
   border: none;
   padding: 6px;
@@ -515,6 +531,7 @@ body.theme-dark .stat-card {
   box-shadow: none;
   transition: transform 0.12s ease, opacity 0.12s ease;
 }
+/* ensure svg inherits text color so fill=currentColor works */
 .result-summary-btn { color: #0f172a; }
 body.theme-dark .result-summary-btn { color: #e6eefc; }
 .result-summary-btn:focus { outline: none; }
@@ -522,27 +539,31 @@ body.theme-dark .result-summary-btn { color: #e6eefc; }
 
 .result-summary-btn svg { width: 22px; height: 22px; display: block; }
 
+/* Mobile: place result action icons on the right side of the pie */
 @media (max-width: 640px) {
   .result-pie { position: relative; }
   .result-pie .result-summary-btn,
   .result-pie .result-download-btn {
     position: absolute;
-    top: calc(50% - 9px);
+    top: calc(50% - 9px); /* horizontally align at vertical center */
     bottom: auto;
     background: transparent;
     padding: 4px;
     z-index: 4;
   }
+  /* place side-by-side to the right of the pie */
   .result-pie .result-summary-btn { right: -60px; }
   .result-pie .result-download-btn { right: -100px; }
   .result-pie .result-summary-btn svg,
   .result-pie .result-download-btn svg { width: 18px; height: 18px; }
+  /* Mobile height reduction adjustments */
   .result-pie { width: 140px; height: 140px; }
   .result-wrap { gap: 12px; }
   .stat-card { padding: 10px; gap: 4px; }
   .stat-value { font-size: 20px; }
 }
 
+/* Summary modal */
 .summary-overlay {
   position: fixed;
   inset: 0;
@@ -601,10 +622,11 @@ body.theme-dark .not-attempted { color: #94a3b8 }
     width: 100%;
   }
 }
+/* FINAL OVERRIDE: Force horizontal Previous/Next on narrow mobile */
 @media (max-width: 640px) {
   .quiz-shell .quiz-nav {
     display: flex;
-    flex-direction: row !important; 
+    flex-direction: row !important; /* override any earlier column rule */
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
@@ -619,13 +641,15 @@ body.theme-dark .not-attempted { color: #94a3b8 }
   }
   .quiz-shell .quiz-nav #prev-question-btn { order: 1; text-align: left; }
   .quiz-shell .quiz-nav .quiz-submit-center { order: 2; flex: 0 0 auto; }
+  /* Mobile-only narrower submit button */
   .quiz-shell .quiz-nav .quiz-submit-center {
     width: auto;
-    min-width: 78px;
+    min-width: 78px; /* reduced from prior 105px */
     padding: 6px 10px;
   }
   .quiz-shell .quiz-nav #next-question-btn { order: 3; text-align: right; }
 }
+/* intentionally no overrides for .goo-button here to ensure exact match with landing buttons */
 
 .quiz-result {
   text-align: center;
@@ -646,6 +670,8 @@ body.theme-dark .quiz-result {
 .quiz-result.is-visible {
   display: block;
 }
+
+/* removed quiz-retake custom styles to keep buttons identical to landing */
 
 @media (max-width: 768px) {
   .quiz-page {

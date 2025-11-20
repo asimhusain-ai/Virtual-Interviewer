@@ -1,3 +1,4 @@
+/* Auth page styles (separate file) */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -14,7 +15,7 @@
   transform: translate(-50%, -20px);
   padding: 0;
   background: transparent;
-  color: #0f172a;
+  color: #0f172a; /* light theme: near-black */
   font-weight: 1000;
   font-size: 24px;
   letter-spacing: 0.2px;
@@ -30,7 +31,7 @@
 }
 
 body.theme-dark .auth-toast {
-  color: #f8fafc;
+  color: #f8fafc; /* dark theme: white */
 }
 
 .auth-toast-text {
@@ -42,7 +43,8 @@ body.theme-dark .auth-toast {
   max-width: 520px;
   background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.72));
   border: 2px solid rgba(24, 33, 54, 0.06);
-  border-radius: 40px;
+  border-radius: 40px; /* desktop: +10px rounder corners */
+  /* desktop: reduce height slightly */
   padding: 6px 12px 10px;
   box-shadow: 0 30px 60px rgba(2,6,23,0.18);
   backdrop-filter: blur(8px) saturate(120%);
@@ -78,8 +80,12 @@ body.theme-dark .auth-card {
   color: #0f172a;
 }
 
+/* Dark theme: make auth heading visible */
 body.theme-dark .auth-title { color: #e6eefc; }
 
+  /* keep labels left-aligned above inputs; don't offset them with negative margins */
+/* margin-left: 0;
+margin-right: 0; */
 body.theme-dark .auth-desc { color: #94a3b8; }
 
 .auth-form {
@@ -127,7 +133,7 @@ body.theme-dark .auth-form-modern .auth-input-icon {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  align-items: flex-start;
+  align-items: flex-start; /* left align label + input */
 }
 
 .auth-field label {
@@ -135,6 +141,8 @@ body.theme-dark .auth-form-modern .auth-input-icon {
   color: #334155;
   font-weight: 600;
   text-align: left;
+  /* labels aligned with the (now narrower) widened inputs */
+  /* align the label with the wider inputs */
   width: calc(100% + 120px);
   margin-left: -60px;
   margin-right: -60px;
@@ -150,13 +158,17 @@ body.theme-dark .auth-field label { color: #cbd5e1; }
   color: #0f172a;
   font-size: 13px;
   transition: box-shadow 0.18s ease, transform 0.18s ease;
+  /* increase visible width while keeping the card the same size: expand symmetrically by 20px */
+  /* expand inputs more so they are visibly wider on desktop */
   width: calc(100% + 120px);
   margin-left: -60px;
   margin-right: -60px;
   box-sizing: border-box;
+  /* make inputs consistent height across fields */
   min-height: 35px;
   height: 35px;
   line-height: 16px;
+  /* ensure text inside inputs is left-aligned on auth pages */
   text-align: left;
 }
 
@@ -259,6 +271,7 @@ body.theme-dark .auth-password-field .password-toggle:hover {
   color: #93c5fd;
 }
 
+/* Login form overrides (come after shared rules to ensure precedence) */
 .auth-form-modern .auth-field label {
   width: calc(100% + 120px);
   margin-left: -60px;
@@ -293,6 +306,7 @@ body.theme-dark .auth-form-modern .auth-field label {
   transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
+/* Login form inputs: add 1px extra height over base */
 .auth-form-modern .login-field .auth-input {
   min-height: 36px;
   height: 36px;
@@ -358,7 +372,7 @@ body.theme-dark .auth-form-modern .password-toggle:focus-visible {
   display: flex;
   gap: 12px;
   align-items: center;
-  justify-content: center;
+  justify-content: center; /* center the primary button */
   margin-top: -4px;
 }
 
@@ -442,6 +456,7 @@ body.theme-dark .auth-social-icon--github svg {
 }
 
 .auth-cta {
+  /* keep minimal so .goo-button styles take precedence */
   padding: 0;
   border: none;
   background: transparent;
@@ -452,6 +467,7 @@ body.theme-dark .auth-social-icon--github svg {
 
 .auth-secondary { background: transparent; color: inherit; border: 1px solid rgba(15,23,42,0.06); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
 
+/* Footer link style: remove background and border for small footer auth links */
 .auth-footer-link {
   background: transparent !important;
   border: none !important;
@@ -464,6 +480,7 @@ body.theme-dark .auth-social-icon--github svg {
 .auth-footer-link:hover {
   text-decoration: underline;
 }
+/* Reduce size only for auth page footer links (login/signup anchors) */
 body.auth-page .auth-footer-link {
   font-size: 12px;
   line-height: 1.1;
@@ -499,16 +516,19 @@ body.theme-dark .auth-forgot-link {
   color: #60a5fa;
 }
 
+/* Ensure selects share the same visual height and padding */
 select.auth-input {
   min-height: 35px;
   height: 35px;
   line-height: 16px;
-  padding: 6px 14px;
+  padding: 6px 14px; /* slightly reduce vertical padding to fit select arrows */
+  /* make dropdown appear wider to match other inputs */
   width: calc(100% + 120px);
   margin-left: -60px;
   margin-right: -60px;
   background: #ffffff;
   color: inherit;
+  /* explicitly left-align selected option text so genders appear at the left */
   text-align: left;
 }
 
@@ -522,11 +542,12 @@ body.theme-dark .auth-footer { color: #94a3b8; }
 @media (max-width: 600px) {
   .auth-page { padding: 24px 8px; }
   .auth-card {
-    max-width: 360px;
-    padding: 6px 8px;
-    border-radius: 35px;
-    border: 1px solid rgba(148, 163, 184, 0.18);
+    max-width: 360px; /* widen mobile form */
+    padding: 6px 8px; /* tighten vertical spacing */
+    border-radius: 35px; /* +10px rounder corners on mobile */
+    border: 1px solid rgba(148, 163, 184, 0.18); /* requested mobile border */
   }
+  /* Halve toast size for mobile only */
   .auth-toast { font-size: 11px; top: 70px; letter-spacing: 0.1px; }
   .auth-toast-text { font-weight: 700; }
   body.theme-dark .auth-card { border: 1px solid rgba(148, 163, 184, 0.18); }
@@ -608,12 +629,13 @@ body.theme-dark .auth-footer { color: #94a3b8; }
   }
 }
 
+/* On small screens keep inputs within card to avoid overflow */
 @media (max-width: 420px) {
   .auth-card {
-    max-width: 320px;
-    padding: 6px 8px; 
-    border-radius: 35px; 
-    border: 1px solid rgba(148, 163, 184, 0.18); 
+    max-width: 320px; /* widen on very small screens */
+    padding: 6px 8px; /* gently reduce height a bit more */
+    border-radius: 35px; /* +10px rounder corners on mobile */
+    border: 1px solid rgba(148, 163, 184, 0.18); /* requested mobile border */
   }
   body.theme-dark .auth-card { border: 1px solid rgba(148, 163, 184, 0.18); }
   .auth-title { font-size: 15px; }
@@ -661,6 +683,8 @@ body.theme-dark .auth-footer { color: #94a3b8; }
   }
 }
 
+
+/* Keep labels normal on small screens to avoid overflow */
 @media (max-width: 420px) {
   .auth-field label { margin-left: 0; margin-right: 0; }
   .auth-password-field .auth-input-wrap {
@@ -668,23 +692,30 @@ body.theme-dark .auth-footer { color: #94a3b8; }
     margin: 0;
   }
 }
+/* small helper to reuse goo button look where appropriate */
 .auth-cta.goo-like { padding: 12px 18px; border-radius: 25px; }
+
+/* Reduce height of auth page goo-buttons (signup/login) by 2px vertically
+   without affecting other pages. */
 body.auth-page .goo-button {
-  padding: 12px 16px;
+  padding: 12px 16px; /* default 14px 18px -> reduce vertical padding by 2px */
 }
 
+/* Further reduce height and width of the primary auth buttons (Login/Sign up)
+   scoped to the auth form so other goo-buttons are unaffected. */
 .auth-actions .goo-button,
 body.auth-page .auth-actions .goo-button {
-  padding: 9px 5px; 
+  padding: 9px 5px; /* additional 1px shorter height, 2px narrower width */
   font-size: 13px;
   border-radius: 0px;
   min-width: 79px;
   width: auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px; 
+  gap: 8px; /* ensure space between spinner and text */
 }
 
+/* Auth primary buttons: Hero Bold styling and uppercase label */
 .auth-actions .auth-submit-text {
   font-family: "Hero", "Poppins", sans-serif;
   font-weight: 700;
@@ -693,10 +724,10 @@ body.auth-page .auth-actions .goo-button {
 }
 
 .auth-spinner {
-  display: none;
+  display: none; /* visibility controlled by loading state */
 }
 .goo-button.is-loading .auth-spinner {
-  display: inline-block; 
+  display: inline-block; /* show spinner when loading */
 }
 
 .goo-button.is-loading .auth-submit-text {
@@ -708,7 +739,13 @@ body.auth-page .auth-actions .goo-button {
   pointer-events: none;
 }
 
+/* Removed duplicate keyframes; using global spin */
+/* The spinner animation is now handled globally */
+/* @keyframes auth-spin is no longer needed */
+
+/* Make login inputs wider on desktop only */
 @media (min-width: 768px) {
+  /* Slightly reduce widened width for login fields */
   .auth-form-modern .login-field .auth-input-shell {
     width: calc(100% + 140px);
     margin-left: -70px;

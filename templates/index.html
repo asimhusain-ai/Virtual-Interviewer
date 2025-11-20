@@ -307,13 +307,13 @@
                     {% set recent = recent_users | default([]) %}
                     {% for user in recent %}
                     <tr>
-                      <td data-label="ID">{{ user.id }}</td>
-                      <td data-label="Name">{{ user.name or '—' }}</td>
-                      <td data-label="Email">{{ user.email }}</td>
-                      <td data-label="Admin">{{ 'Yes' if user.is_admin else 'No' }}</td>
+                      <td>{{ user.id }}</td>
+                      <td>{{ user.name or '—' }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="4" class="admin-empty" data-label="Status">No users yet.</td></tr>
+                    <tr><td colspan="4" class="admin-empty">No users yet.</td></tr>
                     {% endfor %}
                   </tbody>
                 </table>
@@ -347,22 +347,22 @@
                   {% for user in all_users %}
                   {% set profile = profile_map.get(user.id) if profile_map is defined else None %}
                   <tr>
-                    <td data-label="ID">{{ user.id }}</td>
-                    <td data-label="Name">{{ user.name or '—' }}</td>
-                    <td data-label="Email">{{ user.email }}</td>
-                    <td data-label="Location">{{ profile.location if profile and profile.location else '—' }}</td>
-                    <td data-label="Toggle Admin">
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name or '—' }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ profile.location if profile and profile.location else '—' }}</td>
+                    <td>
                       <form method="post" action="{{ url_for('admin.admin_toggle_admin', user_id=user.id) }}" class="admin-inline-form">
                         <button type="submit" class="admin-btn admin-btn-secondary">{{ 'Remove Admin' if user.is_admin else 'Make Admin' }}</button>
                       </form>
                     </td>
-                    <td data-label="Reset Password">
+                    <td>
                       <form method="post" action="{{ url_for('admin.admin_reset_password', user_id=user.id) }}" class="admin-inline-form">
                         <input type="text" name="temporary_password" placeholder="Temporary password" required />
                         <button type="submit" class="admin-btn">Set</button>
                       </form>
                     </td>
-                    <td data-label="Edit">
+                    <td>
                       <details class="admin-inline-edit">
                         <summary class="admin-inline-edit-trigger">Edit</summary>
                         <form method="post" action="{{ url_for('admin.admin_update_user', user_id=user.id) }}" class="admin-inline-form admin-inline-edit-form">
@@ -373,14 +373,14 @@
                         </form>
                       </details>
                     </td>
-                    <td data-label="Delete">
+                    <td>
                       <form method="post" action="{{ url_for('admin.admin_delete_user', user_id=user.id) }}" class="admin-inline-form" onsubmit="return confirm('Delete this user permanently? This will remove their data.');">
                         <button type="submit" class="admin-btn admin-btn-danger">Delete</button>
                       </form>
                     </td>
                   </tr>
                   {% else %}
-                  <tr><td colspan="8" class="admin-empty" data-label="Status">No users found.</td></tr>
+                  <tr><td colspan="8" class="admin-empty">No users found.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>

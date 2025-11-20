@@ -1,3 +1,4 @@
+/* This code is written by - Asim Husain */
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
 
@@ -82,6 +83,7 @@ body.feedback-mode #results-section {
   }
 }
 
+/* Theme toggle positioning */
 .container > .toggle {
   position: fixed;
   top: 12px;
@@ -89,6 +91,7 @@ body.feedback-mode #results-section {
   z-index: 70;
 }
 
+/* From Uiverse.io by santosh-sarkar */
 .toggle {
   width: 56px;
   height: 56px;
@@ -134,6 +137,7 @@ body.feedback-mode #results-section {
   height: 28px;
 }
 
+/* Restore global input styles outside toggle */
 input.input,
 textarea.input,
 select.input {
@@ -144,6 +148,7 @@ select.input {
   display: none;
 }
 
+/* App Container */
 .app-container {
   width: 100%;
   max-width: 820px;
@@ -152,6 +157,7 @@ select.input {
   box-sizing: border-box;
 }
 
+/* Landing card */
 .landing-card {
   width: 100%;
   max-width: 620px;
@@ -167,7 +173,7 @@ select.input {
   align-items: stretch;
   gap: clamp(16px, 3vw, 28px);
   position: relative;
-  z-index: 1; 
+  z-index: 1; /* ensure card is above ambient background */
 }
 
 body.theme-dark .landing-card {
@@ -176,6 +182,7 @@ body.theme-dark .landing-card {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
+/* Ambient background on landing page: container ignores events, images interactive */
 .ambient-cluster { pointer-events: none; }
 .ambient-cluster img { pointer-events: auto; }
 
@@ -184,6 +191,7 @@ body.feedback-mode .ambient-cluster {
   display: none;
 }
 
+/* Landing Card Controls */
 .landing-controls {
   display: flex;
   justify-content: center;
@@ -206,6 +214,7 @@ body.theme-dark .landing-controls label {
   color: #e2e8f0;
 }
 
+/* Role Selector */
 select,
 input[type="number"] {
   font-family: 'Poppins', sans-serif;
@@ -243,6 +252,7 @@ input[type="number"]:focus {
   border-color: #808080;
 }
 
+/* Question & Feedback Box */
 .question-box, .feedback-box {
   margin: 20px 0;
   padding: 15px;
@@ -301,6 +311,7 @@ body.theme-dark .question-timer {
   min-width: 0;
 }
 
+/* Answer Input + Mic */
 .answer-input-wrapper {
   position: relative;
   width: 100%;
@@ -335,6 +346,7 @@ body.theme-dark .answer-box {
   box-shadow: none;
 }
 
+/* Mic button inside input */
 .mic-icon-btn {
   position: absolute;
   top: 80%;
@@ -354,11 +366,12 @@ body.theme-dark .answer-box {
   height: 27px;
 }
 
+/* Buttons */
 .mic-btn, .next-btn, .submit-btn {
   font-family: 'Poppins', sans-serif;
   background: #1D4ED8;
   color: rgb(248, 246, 246);
-  padding: 8px 13px; 
+  padding: 8px 13px; /* reduced vertical padding by 1px */
   border: none;
   border-radius: 13px;
   margin: 10px auto 0 auto;
@@ -375,6 +388,7 @@ body.theme-dark .answer-box {
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
+/* Back Button */
 .back-button {
   position: fixed;
   top: 35px;
@@ -397,6 +411,7 @@ body.theme-dark .answer-box {
   transform: scale(1.1);
 }
 
+/* Splash Screen */
 .splash-screen {
   all: unset;
   display: flex;
@@ -433,6 +448,7 @@ body.theme-dark .answer-box {
   }
 }
 
+/* Feedback Heading */
 .feedback-heading {
   font-size: 32px;
   font-family: 'Poppins', sans-serif;
@@ -444,6 +460,7 @@ body.theme-dark .feedback-heading {
   color: #93c5fd;
 }
 
+/* MOBILE RESPONSIVE FIXES */
 @media (max-width: 768px) {
   .app-container {
     width: 100%;
@@ -634,18 +651,20 @@ body.theme-dark .feedback-heading {
   }
 }
 
+/* Loading Spinner Animation */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
+/* Unified spinner style for all buttons */
 .loading-spinner,
 .btn-spinner,
-.auth-spinner { 
+.auth-spinner { /* translucent ring + solid white rotating segment */
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(255,255,255,0.28); 
-  border-top: 2px solid #ffffff; 
+  border: 2px solid rgba(255,255,255,0.28); /* faint ring */
+  border-top: 2px solid #ffffff; /* bright rotating segment */
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
   display: inline-block;
@@ -665,6 +684,7 @@ body.theme-dark .auth-spinner {
   border-top: 2px solid #ffffff;
 }
 
+/* Loading state for buttons */
 .mic-btn:disabled {
     background: #9CA3AF !important;
     cursor: not-allowed !important;
@@ -677,6 +697,7 @@ body.theme-dark .auth-spinner {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
+/* Improved Code Container Styling */
 .code-container {
   margin: 15px 0;
   border-radius: 8px;
@@ -705,6 +726,7 @@ body.theme-dark .auth-spinner {
   tab-size: 4;
 }
 
+/* Syntax highlighting for better readability */
 .code-container code {
   font-family: inherit;
   background: transparent;
@@ -716,6 +738,7 @@ body.theme-dark .code-container {
   background: rgba(15, 23, 42, 0.75);
 }
 
+/* Disable hover effects on mobile (touch) only for all buttons */
 @media (hover: none) {
   button:hover,
   .goo-button:hover,
@@ -727,7 +750,7 @@ body.theme-dark .code-container {
     filter: none !important;
     opacity: 1 !important;
   }
-
+  /* Also neutralize goo-button hover-specific variables */
   .goo-button:hover { --a: 0 !important; --hover-y: 0 !important; --hover-scale: 0 !important; }
 }
 
@@ -744,6 +767,7 @@ body.theme-dark .code-container code {
   color: inherit;
 }
 
+/* Mobile responsive code blocks */
 @media (max-width: 768px) {
     .code-container pre {
         font-size: 12px !important;
@@ -751,6 +775,7 @@ body.theme-dark .code-container code {
     }
 }
 
+/* ================= Gooey Button (landing sample) ================ */
 @property --a {
   syntax: "<percentage>";
   initial-value: 0%;
@@ -766,13 +791,13 @@ body.theme-dark .code-container code {
   --mag-y: 0px;
   --hover-y: 0px;
   --hover-scale: 1;
-
+  /* use the requested blue as the goo/button background */
   --button: #1D4ED8;
   --edge: -10px;
   --size: 1em;
 
   background: transparent;
-
+  /* default color; overridden per theme below */
   color: #ffffff;
   font-size: 15px;
   position: relative;
@@ -793,13 +818,14 @@ body.theme-dark .code-container code {
   text-decoration: none;
 }
 
+/* Reduce height of start-page primary goo-buttons (Start Demo, Login, Sign Up) by 2px */
 body.start-page .goo-button {
-  padding: 11px 16px; 
+  padding: 11px 16px; /* original 14px 18px -> reduce vertical padding by 2px */
 }
 
 .landing-card #start-btn.goo-button,
 .landing-card #take-quiz-btn.goo-button {
-  padding: 12px 15px; 
+  padding: 12px 15px; /* make landing page Start Interview / Take Quiz buttons 2px shorter */
 }
 
 #submit-btn.goo-button {
@@ -818,11 +844,12 @@ body.start-page .goo-button {
   --hover-scale: 1;
 }
 
+
 .goo-button:before {
   content: "";
   position: absolute;
   inset: 0em;
-
+  /* reduced blur and inner padding for squarer look */
   filter: blur(4px) url(#goo);
   background-image:
     linear-gradient(0deg,var(--button),var(--button)),
@@ -841,12 +868,14 @@ body.start-page .goo-button {
 
 .goo-button:disabled {
   cursor: not-allowed;
-  opacity: 1; 
+  opacity: 1; /* keep vivid color when disabled */
 }
 
 .goo-button:disabled::before {
-  opacity: 1; 
+  opacity: 1; /* keep glow visible at normal intensity */
 }
+
+
 
 body, html {
   height: 100%;
@@ -870,6 +899,7 @@ main {
   --spring-duration: 1.66s;
 }
 
+/* Page-corner dashboard button — hide when demo mode active */
 .page-corner-dashboard {
   position: fixed;
   top: 20px;
@@ -900,10 +930,11 @@ body.demo-mode .page-corner-leaderboard a {
   display: none !important;
 }
 
+/* Make the fixed Dashboard corner button narrower so it doesn't span too wide */
 .page-corner-dashboard .goo-button {
-  padding: 11px 13px; 
-  font-size: 13px;   
-  min-width: 0;      
+  padding: 11px 13px; /* reduce horizontal/vertical padding */
+  font-size: 13px;   /* slightly smaller text */
+  min-width: 0;      /* allow shrinking below default content-based width */
   font-family: "Hero", "Poppins", sans-serif;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -922,9 +953,9 @@ body.demo-mode .page-corner-leaderboard a {
 
 @media (max-width: 640px) {
   .page-corner-dashboard {
-    top: 12px; 
-    bottom: auto; 
-    right: 12px; 
+    top: 12px; /* keep at top on mobile */
+    bottom: auto; /* remove bottom placement */
+    right: 12px; /* slight inward shift for small screens */
   }
 
   .page-corner-leaderboard {
@@ -933,6 +964,7 @@ body.demo-mode .page-corner-leaderboard a {
   }
 }
 
+/* Dashboard specific styles */
 .dashboard-header{
   display:flex; align-items:center; justify-content:space-between; padding:14px 20px; max-width:1100px; margin:14px auto 0;
 }
@@ -1149,61 +1181,6 @@ body.demo-mode .page-corner-leaderboard a {
   gap: 12px;
 }
 
-.leaderboard-table-container {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  background: rgba(248, 250, 252, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-}
-
-.leaderboard-table-grid {
-  width: 100%;
-  min-width: 640px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.leaderboard-table-grid thead th {
-  text-align: left;
-  font-weight: 700;
-  color: #1f2937;
-  padding: 12px 16px;
-  background: rgba(241, 245, 249, 0.75);
-  position: sticky;
-  top: 0;
-}
-
-.leaderboard-table-grid tbody td {
-  padding: 12px 16px;
-  vertical-align: middle;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.leaderboard-table-grid tbody tr:hover {
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.lb-rank { font-weight: 700; font-size: 16px; color: #1f2937; }
-.lb-name { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #111827; min-width: 0; }
-.lb-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lb-score { font-size: 18px; font-weight: 700; color: #0f172a; text-align: right; white-space: nowrap; }
-.lb-meta { font-size: 12px; color: #475569; font-weight: 600; text-align: right; display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
-
-@media (min-width: 721px) {
-  .leaderboard-table-grid thead th:nth-child(4),
-  .leaderboard-table-grid thead th:nth-child(5) {
-    text-align: right;
-  }
-
-  .leaderboard-table-grid tbody td.lb-score,
-  .leaderboard-table-grid tbody td.lb-meta {
-    text-align: right;
-  }
-}
-
 .leaderboard-row {
   display: grid;
   grid-template-columns: 56px 44px minmax(80px, 110px) minmax(0, 1fr) minmax(120px, 200px);
@@ -1326,11 +1303,7 @@ body.demo-mode .page-corner-leaderboard a {
   }
 
   .leaderboard-shell {
-
     width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    box-sizing: border-box;
     padding: 24px 20px;
     border-radius: 28px;
     box-shadow: 0 28px 68px rgba(15, 23, 42, 0.18);
@@ -1340,26 +1313,27 @@ body.demo-mode .page-corner-leaderboard a {
 
   .leaderboard-header {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
   }
 
   .leaderboard-title {
-    font-size: 24px;
+    font-size: 30px;
+    order: 1;
   }
 
   .leaderboard-back {
-    align-self: auto;
-    margin-left: auto; 
-    margin-right: 10px; 
+    order: 0;
+    align-self: flex-start;
     font-size: 14px;
     letter-spacing: 0.18em;
   }
 
-  .leaderboard-top { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .leaderboard-top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
 
   .leaderboard-card {
     align-items: flex-start;
@@ -1392,8 +1366,19 @@ body.demo-mode .page-corner-leaderboard a {
     font-size: 13px;
   }
 
-  .leaderboard-table-container { border-radius: 14px; }
-  .leaderboard-table-grid { min-width: 560px; }
+  .leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+
+  .leaderboard-row > * {
+    flex: 0 0 auto;
+  }
 
   .leaderboard-row-rank {
     order: 0;
@@ -1406,22 +1391,49 @@ body.demo-mode .page-corner-leaderboard a {
     height: 48px;
   }
 
-  .lb-name { gap: 10px; white-space: nowrap; }
-  .lb-name-text { white-space: nowrap; }
+  .leaderboard-row-name {
+    order: 2;
+    padding-left: 0;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
 
-  .lb-meta { flex-direction: column; gap: 4px; text-align: left; align-items: flex-start; font-size: 12px; }
-  .lb-meta span { white-space: normal; }
+  .leaderboard-row-name span {
+    white-space: nowrap;
+  }
 
-  .lb-last-active { display: none; }
-  .lb-score { font-size: 16px; }
+  .leaderboard-row-name-text {
+    margin-left: 0;
+  }
+
+  .leaderboard-row-meta {
+    order: 3;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .leaderboard-row-meta span {
+    white-space: nowrap;
+  }
+
+  .leaderboard-row-meta span:last-child {
+    display: none;
+  }
+
+  .leaderboard-row-score {
+    order: 4;
+    text-align: right;
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 520px) {
   .leaderboard-shell {
-
-    width: 100%;
-    max-width: 100%;
-    padding: 10px;
+    padding: 24px;
     border-radius: 24px;
   }
 
@@ -1435,16 +1447,18 @@ body.demo-mode .page-corner-leaderboard a {
     font-size: 22px;
   }
 
-  .leaderboard-table-grid { min-width: 520px; }
+  .leaderboard-row {
+    gap: 10px;
+  }
 }
 
 .dashboard-main{
-  display: block; 
+  display: block; /* ensure dashboard uses normal flow, not grid centering */
   box-sizing: border-box;
   max-width:1100px;
   margin:12px auto;
   padding:12px;
-
+  /* allow full-page scrolling so components aren't cut off */
   max-height: calc(100vh - 96px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

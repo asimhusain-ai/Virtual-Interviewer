@@ -243,32 +243,10 @@ def _avatar_url_for(profile_pic_value, user_id, *, cache_bust=False):
     return f"/static/{value}".replace('\\', '/')
 
 # Configure SQLite database (auto-created)
-
-# Configure database: prefer environment variable for production (Supabase, Vercel, etc.)
-def _normalize_database_url(raw_url):
-    if not raw_url:
-        return None
-    url = str(raw_url).strip()
-    # SQLAlchemy prefers 'postgresql://' rather than 'postgres://'
-    if url.startswith('postgres://'):
-        url = 'postgresql://' + url[len('postgres://'):]
-    return url
-
-db_env_url = _normalize_database_url(os.getenv('DATABASE_URL') or os.getenv('SQLALCHEMY_DATABASE_URI'))
-if db_env_url:
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_env_url
-else:
-    # Local development default (file stored in project root)
-    db_path = os.path.join(app.root_path, 'users.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-
+db_path = os.path.join(app.root_path, 'users.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-
-# db_path = os.path.join(app.root_path, 'users.db')
-# app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 bcrypt = Bcrypt(app)
 
 oauth = OAuth(app)
@@ -316,7 +294,7 @@ OAUTH_PROVIDERS = _register_oauth_clients()
 # Serve favicon.ico (browsers request this path automatically) by redirecting to existing PNG
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static', 'assets'), 'favicon.ico')
+    return send_from_directory(os.path.join(app.root_path, 'static', 'assets'), 'favicon.png')
 
 # Store user sessions 
 user_sessions = {}

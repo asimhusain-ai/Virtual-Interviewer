@@ -53,54 +53,37 @@
             {% if remaining %}
             <section class="leaderboard-table" aria-label="Top performers">
                 <h2 class="leaderboard-subheading">Top Performers</h2>
-                <div class="leaderboard-table-container" role="region" aria-label="Leaderboard table" tabindex="0">
-                    <table class="leaderboard-table-grid">
-                        <thead>
-                            <tr>
-                                <th scope="col">Rank</th>
-                                <th scope="col">Avatar</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Score</th>
-                                <th scope="col">Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for entry in remaining %}
-                            <tr>
-                                <td class="lb-rank">#{{ entry.rank }}</td>
-                                <td>
-                                    <div class="leaderboard-row-avatar" aria-hidden="true">
-                                        {% if entry.avatar_url %}
-                                            <img src="{{ entry.avatar_url }}" alt="{{ entry.display_name }} profile" />
-                                        {% else %}
-                                            <span>{{ entry.initials }}</span>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="lb-name">
-                                        <span class="lb-name-text">{{ entry.name or entry.display_name }}</span>
-                                        {% if entry.badge_asset %}
-                                            <img src="{{ url_for('static', filename=entry.badge_asset) }}" alt="{{ entry.badge_label }} badge" class="leaderboard-row-badge" loading="lazy" />
-                                        {% endif %}
-                                    </div>
-                                </td>
-                                <td class="lb-score">{{ entry.points_total or 0 }} pts</td>
-                                <td class="lb-meta">
-                                    {% if entry.quiz_count %}
-                                        <span>Quiz {{ entry.quiz_count }} ({{ entry.quiz_percentage or 0 }}%)</span>
-                                    {% endif %}
-                                    {% if entry.interview_count %}
-                                        <span>Interview {{ entry.interview_count }} ({{ entry.interview_percentage or 0 }}%)</span>
-                                    {% endif %}
-                                    {% if entry.last_activity %}
-                                        <span class="lb-last-active">Last active {{ entry.last_activity.strftime('%b %d, %Y') }}</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="leaderboard-list">
+                    {% for entry in remaining %}
+                        <article class="leaderboard-row">
+                            <span class="leaderboard-row-rank">#{{ entry.rank }}</span>
+                            <div class="leaderboard-row-avatar" aria-hidden="true">
+                                {% if entry.avatar_url %}
+                                    <img src="{{ entry.avatar_url }}" alt="{{ entry.display_name }} profile" />
+                                {% else %}
+                                    <span>{{ entry.initials }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="leaderboard-row-score">{{ entry.points_total or 0 }} pts</div>
+                            <div class="leaderboard-row-name">
+                                <span class="leaderboard-row-name-text">{{ entry.name or entry.display_name }}</span>
+                                {% if entry.badge_asset %}
+                                    <img src="{{ url_for('static', filename=entry.badge_asset) }}" alt="{{ entry.badge_label }} badge" class="leaderboard-row-badge" loading="lazy" />
+                                {% endif %}
+                            </div>
+                            <div class="leaderboard-row-meta">
+                                {% if entry.quiz_count %}
+                                    <span>Quiz {{ entry.quiz_count }} ({{ entry.quiz_percentage or 0 }}%)</span>
+                                {% endif %}
+                                {% if entry.interview_count %}
+                                    <span>Interview {{ entry.interview_count }} ({{ entry.interview_percentage or 0 }}%)</span>
+                                {% endif %}
+                                {% if entry.last_activity %}
+                                    <span>Last active {{ entry.last_activity.strftime('%b %d, %Y') }}</span>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
                 </div>
             </section>
             {% endif %}

@@ -1,3 +1,4 @@
+/* Start page styling that complements existing theme */
 body.start-page {
   padding: 0;
   height: 100vh;
@@ -183,15 +184,19 @@ body.theme-dark .start-heading {
 }
 
 .start-heading-left, .start-heading-right, .start-heading-bar { display:inline-block; will-change:clip-path; transform:translateZ(0); }
+/* Override color only for INTERV segment based on theme */
 .start-heading-left { color:#1D4ED8; }
 body.theme-dark .start-heading-left { color:#1D4ED8; }
 .start-heading-right { color:#000000; }
 body.theme-dark .start-heading-right { color:#ffffff; }
+/* Custom taller thin separator line */
 .start-heading-bar { width:2px; height:1.2em; background:currentColor; vertical-align:middle; margin:0 0.4rem; position:relative; top:0; opacity:1; transition:opacity 700ms ease; }
+/* Initial hidden states using clip-path: fully clipped from bar outward */
 body.heading-anim-init .start-heading-right { clip-path: inset(0 100% 0 0); }
 body.heading-anim-init .start-heading-left { clip-path: inset(0 0 0 100%); }
 body.heading-anim-init .start-heading-bar { opacity:0; }
 
+/* Reduced motion: immediately show (remove clipping) */
 @media (prefers-reduced-motion: reduce) {
   body.heading-anim-init .start-heading-left,
   body.heading-anim-init .start-heading-right {
@@ -200,6 +205,7 @@ body.heading-anim-init .start-heading-bar { opacity:0; }
   }
 }
 
+/* Reduced motion: immediately reveal without sliding */
 @media (prefers-reduced-motion: reduce) {
   body.heading-anim-init .start-heading-left,
   body.heading-anim-init .start-heading-right {
@@ -214,13 +220,13 @@ body.heading-anim-init .start-heading-bar { opacity:0; }
 }
 
 .start-heading-bar {
-  color: #8d8d8d; 
+  color: #8d8d8d; /* neutral gray replacing red */
   margin: 0 0.18em;
-  font-weight: 400;
+  font-weight: 400; /* slim down the separator glyph */
 }
 
 body.theme-dark .start-heading-bar {
-  color: #8d8d8d;
+  color: #8d8d8d; /* same gray in dark theme */
 }
 
 .ambient-cluster {
@@ -472,7 +478,7 @@ body.theme-dark .admin-badge svg {
   gap: 30px;
   max-width: 0;
   margin-left: 0;
-  overflow: visible;
+  overflow: visible; /* allow tooltips to escape container */
   pointer-events: none;
   transition: max-width 0.38s cubic-bezier(0.19, 1, 0.22, 1), margin-left 0.32s ease;
 }
@@ -572,27 +578,28 @@ body.theme-dark .social-icon:hover {
   color: #93c5fd;
 }
 
+/* Tooltip styling */
 .social-icon .social-tooltip {
   position: absolute;
   left: 50%;
   top: -35%;
   transform: translate(-50%, -4px);
-  background: transparent; 
+  background: transparent; /* text only */
   color: #0f172a;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .5px;
-  padding: 0; 
+  padding: 0; /* remove bubble spacing */
   border-radius: 0;
-  box-shadow: none; 
+  box-shadow: none; /* no bubble shadow */
   opacity: 0;
   pointer-events: none;
   transition: opacity .35s ease, transform .35s ease;
   white-space: nowrap;
-  z-index: 100; 
+  z-index: 100; /* ensure above icons and nearby elements */
 }
 body.theme-dark .social-icon .social-tooltip {
-  background: transparent; 
+  background: transparent; /* text only */
   color: #f1f5f9;
   box-shadow: none;
 }
