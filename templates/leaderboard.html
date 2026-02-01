@@ -6,8 +6,35 @@
     <title>Leaderboard • IntervBot</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+        <script>
+            window.IS_AUTHENTICATED = {{ 'true' if session.get('user_id') else 'false' }};
+        </script>
 </head>
 <body class="leaderboard-page">
+        <script>
+            (function () {
+                try {
+                    var stored = null;
+                    try {
+                        stored = localStorage.getItem('iv_theme');
+                    } catch (e) {
+                        stored = null;
+                    }
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme = stored || (prefersDark ? 'theme-dark' : 'theme-light');
+                    var body = document.body;
+                    if (body) {
+                        body.classList.remove('theme-light', 'theme-dark');
+                        body.classList.add(theme);
+                        body.dataset.theme = theme;
+                    }
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+                } catch (e) {
+                    // ignore theme errors
+                }
+            })();
+        </script>
     <div class="leaderboard-shell">
         <header class="leaderboard-header">
             <div>
@@ -95,7 +122,9 @@
             </section>
         {% endif %}
     </div>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cursor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/goo-buttons.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/back-logout.js') }}"></script>
 </body>
 </html>

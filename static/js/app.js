@@ -881,6 +881,102 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isStartPage) {
                 virtualInterviewer = new VirtualInterviewer();
         }
+
+    const streakCountEl = document.getElementById('streakCount');
+    const streakDaysEl = document.getElementById('streakDays');
+    const streakLabelEl = document.getElementById('streakLabel');
+    if (streakCountEl && streakDaysEl && streakLabelEl) {
+        const configs = [
+            { label: 'Focus score', count: 78, activeDays: 5 },
+            { label: 'Consistency tracker', count: 6, activeDays: 6 },
+            { label: 'Session momentum', count: 4, activeDays: 4 },
+            { label: 'Practice pulse', count: 92, activeDays: 5 },
+            { label: 'Readiness meter', count: 81, activeDays: 4 },
+            { label: 'Skill cadence', count: 3, activeDays: 3 },
+            { label: 'Interview momentum', count: 7, activeDays: 5 }
+        ];
+
+        const applyConfig = (config) => {
+            streakLabelEl.textContent = config.label;
+            streakCountEl.textContent = String(config.count);
+            Array.from(streakDaysEl.children).forEach((el, idx) => {
+                if (idx < config.activeDays) {
+                    el.classList.add('is-active');
+                } else {
+                    el.classList.remove('is-active');
+                }
+            });
+        };
+
+        let labelIndex = 0;
+        applyConfig(configs[labelIndex]);
+        setInterval(() => {
+            labelIndex = (labelIndex + 1) % configs.length;
+            applyConfig(configs[labelIndex]);
+        }, 5000);
+    }
+
+        const donutCtx = document.getElementById('landingDonut');
+        const donutLegend = document.getElementById('landingDonutLegend');
+        if (donutCtx && window.Chart) {
+            const styles = getComputedStyle(document.body);
+            const chart1 = styles.getPropertyValue('--chart-1').trim() || '#58a6ff';
+            const chart2 = styles.getPropertyValue('--chart-2').trim() || '#2ea043';
+            const donutChart = new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Quiz', 'Interview'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [chart1, chart2],
+                        hoverOffset: 10,
+                        spacing: 3,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    animation: { animateRotate: true, animateScale: true, duration: 1200, easing: 'easeOutQuart' },
+                    layout: { padding: 6 },
+                    elements: { arc: { borderRadius: 6 } },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                }
+            });
+
+            const renderLegend = (values) => {
+                if (!donutLegend) return;
+                donutLegend.innerHTML = values
+                    .map((val, idx) => {
+                        const label = donutChart.data.labels[idx];
+                        const color = donutChart.data.datasets[0].backgroundColor[idx];
+                        return `<div class="legend-item"><span class="swatch" style="background:${color}"></span><span class="label">${label}</span><span class="value">${val}</span></div>`;
+                    })
+                    .join('');
+            };
+
+            fetch('/api/results')
+                .then((resp) => resp.ok ? resp.json() : Promise.reject(resp))
+                .then((data) => {
+                    if (!data || !data.success || !Array.isArray(data.results)) {
+                        return;
+                    }
+                    const counts = data.results.reduce((acc, row) => {
+                        const kind = (row.type || '').toString().toLowerCase();
+                        if (kind === 'quiz') acc.quiz += 1;
+                        else acc.interview += 1;
+                        return acc;
+                    }, { quiz: 0, interview: 0 });
+                    donutChart.data.datasets[0].data = [counts.quiz, counts.interview];
+                    donutChart.update();
+                    renderLegend([counts.quiz, counts.interview]);
+                })
+                .catch(() => {
+                    renderLegend([0, 0]);
+                });
+        }
+
         if (typeof window.ivRefreshGooButtons === 'function') {
                 window.ivRefreshGooButtons();
         }
@@ -893,7 +989,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     const left=document.querySelector('.start-heading-left');
     const right=document.querySelector('.start-heading-right');
     const bar=document.querySelector('.start-heading-bar');
-    if(!left||!right||!bar) { body.classList.remove('heading-anim-init'); return; }
+    const subheading=document.querySelector('.start-subheading');
+    const cta=document.querySelector('.start-cta');
+    const revealSubheading=()=>{
+        if(subheading){
+            subheading.classList.add('is-visible');
+        }
+        if(cta){
+            cta.classList.add('is-visible');
+        }
+    };
+    if(!left||!right||!bar) { body.classList.remove('heading-anim-init'); revealSubheading(); return; }
 
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if(prefersReduced){
@@ -901,6 +1007,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         left.style.opacity='1'; left.style.transform='none';
         right.style.opacity='1'; right.style.transform='none';
         body.classList.remove('heading-anim-init');
+        revealSubheading();
         return;
     }
 
@@ -924,6 +1031,7 @@ document.addEventListener('DOMContentLoaded',()=>{
                         if(ev.propertyName!=='clip-path') return;
                         left.removeEventListener('transitionend', endLeft);
                         body.classList.remove('heading-anim-init');
+                        revealSubheading();
                     });
                 },150);
             });

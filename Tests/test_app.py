@@ -86,6 +86,22 @@ class TestFlaskApp(unittest.TestCase):
         """Test that index route returns HTML"""
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
+
+    def test_logout_sets_no_cache_and_clear_site_data(self):
+        """Logout should clear cache and prevent back navigation."""
+        response = self.client.get('/logout', follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('logged_out=1', response.headers.get('Location', ''))
+        self.assertIn('no-store', response.headers.get('Cache-Control', ''))
+        self.assertEqual(response.headers.get('Pragma'), 'no-cache')
+        self.assertEqual(response.headers.get('Expires'), '0')
+        self.assertIn('Clear-Site-Data', response.headers)
+
+    def test_protected_route_has_no_cache_headers(self):
+        """Protected routes should send no-store headers even when redirected."""
+        response = self.client.get('/dashboard', follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('no-store', response.headers.get('Cache-Control', ''))
     
     @patch('app.fetch_unique_interview_questions')
     def test_start_interview_success(self, mock_fetch):

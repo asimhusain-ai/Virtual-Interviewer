@@ -47,6 +47,13 @@ from werkzeug.http import http_date
 
 load_dotenv()
 
+app = Flask(__name__)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
 
 def _safe_env_int(name, default_value):
     raw = os.getenv(name)
@@ -64,9 +71,28 @@ if not SECRET_KEY:
     # Generate a per-process secret instead of using a predictable fallback
     SECRET_KEY = secrets.token_urlsafe(64)
 
-app = Flask(__name__)
 app.secret_key = SECRET_KEY
 CORS(app)
+
+
+@app.after_request
+def _apply_secure_cache_headers(response):
+    if request.endpoint == 'static':
+        return response
+
+    is_protected_path = (
+        request.path.startswith('/admin')
+        or request.path.startswith('/dashboard')
+        or request.path.startswith('/api')
+        or request.path == '/logout'
+    )
+
+    if session.get('user_id') or is_protected_path:
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+
+    return response
 
 DEFAULT_ADMIN_EMAIL = (os.getenv('DEFAULT_ADMIN_EMAIL') or '').strip().lower()
 DEFAULT_ADMIN_PASSWORD = (os.getenv('DEFAULT_ADMIN_PASSWORD') or '').strip() or None
@@ -242,11 +268,6 @@ def _avatar_url_for(profile_pic_value, user_id, *, cache_bust=False):
         return value
     return f"/static/{value}".replace('\\', '/')
 
-# Configure SQLite database (auto-created)
-db_path = os.path.join(app.root_path, 'users.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
 oauth = OAuth(app)
@@ -322,8 +343,9 @@ def _cleanup_sessions():
         user_sessions.pop(sid, None)
 
 
-SMTP_EMAIL = os.getenv('SMTP_EMAIL_ADDRESS')
-SMTP_APP_PASSWORD = os.getenv('SMTP_APP_PASSWORD')
+SMTP_EMAIL = (os.getenv('SMTP_EMAIL_ADDRESS') or '').strip()
+_raw_smtp_password = os.getenv('SMTP_APP_PASSWORD') or ''
+SMTP_APP_PASSWORD = ''.join(_raw_smtp_password.split())
 
 
 # --- User model for auth ---
@@ -921,12 +943,15 @@ with app.app_context():
 def start_page():
     """Serve the new start page."""
     logout_message = ''
-    if session.pop('logout_notice', None):
+    if request.args.get('logged_out') == '1':
         logout_message = 'Logged Out'
     return render_template('index.html', page='start', logout_message=logout_message)
 
 @app.route('/landing')
 def landing():
+    if not session.get('user_id'):
+        flash('Please Login to View Dashboard')
+        return redirect(url_for('login'))
     return render_template('index.html', page='landing')
 
 @app.route('/quiz')
@@ -947,7 +972,24 @@ _signup_form = """
         <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
         <link rel="icon" href="{{ url_for('static', filename='assets/favicon.png') }}" />
     </head>
-    <body class="auth-page theme-light">
+    <body class="auth-page">
+        <script>
+            (function () {
+                try {
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme = prefersDark ? 'theme-dark' : 'theme-light';
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+                    if (document.body) {
+                        document.body.classList.remove('theme-light', 'theme-dark');
+                        document.body.classList.add(theme);
+                        document.body.dataset.theme = theme;
+                    }
+                } catch (e) {
+                    // ignore theme storage errors
+                }
+            })();
+        </script>
         {% with messages = get_flashed_messages() %}
         {% set ns = namespace(hero=None, danger=None, fallback=None) %}
         {% if messages %}
@@ -1163,7 +1205,24 @@ _login_form = """
         <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
         <link rel="icon" href="{{ url_for('static', filename='assets/favicon.png') }}" />
     </head>
-    <body class="auth-page theme-light">
+    <body class="auth-page">
+        <script>
+            (function () {
+                try {
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme = prefersDark ? 'theme-dark' : 'theme-light';
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+                    if (document.body) {
+                        document.body.classList.remove('theme-light', 'theme-dark');
+                        document.body.classList.add(theme);
+                        document.body.dataset.theme = theme;
+                    }
+                } catch (e) {
+                    // ignore theme storage errors
+                }
+            })();
+        </script>
         {% with messages = get_flashed_messages() %}
         {% set ns = namespace(hero=None, danger=None, fallback=None) %}
         {% if messages %}
@@ -1252,11 +1311,11 @@ _login_form = """
                 <dl class="demo-credentials-list">
                     <div class="demo-credentials-row">
                         <dt>Email</dt>
-                        <dd data-demo-email>coxoki4714@fermiro.com</dd>
+                        <dd data-demo-email>donihid579@coswz.com</dd>
                     </div>
                     <div class="demo-credentials-row">
                         <dt>Password</dt>
-                        <dd data-demo-password>testuser</dd>
+                        <dd data-demo-password>testuser1</dd>
                     </div>
                 </dl>
             </div>
@@ -1464,7 +1523,24 @@ _verify_otp_form = """
         <link rel="stylesheet" href="{{ url_for('static', filename='css/start.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
     </head>
-    <body class="auth-page theme-light">
+    <body class="auth-page">
+        <script>
+            (function () {
+                try {
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme = prefersDark ? 'theme-dark' : 'theme-light';
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+                    if (document.body) {
+                        document.body.classList.remove('theme-light', 'theme-dark');
+                        document.body.classList.add(theme);
+                        document.body.dataset.theme = theme;
+                    }
+                } catch (e) {
+                    // ignore theme storage errors
+                }
+            })();
+        </script>
         {% set flash_messages = get_flashed_messages() %}
         {% set ns = namespace(hero=None, danger=None, fallback=None) %}
         {% if flash_messages %}
@@ -1630,7 +1706,24 @@ _forgot_password_form = """
         <link rel="stylesheet" href="{{ url_for('static', filename='css/start.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
     </head>
-    <body class="auth-page theme-light">
+    <body class="auth-page">
+        <script>
+            (function () {
+                try {
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme = prefersDark ? 'theme-dark' : 'theme-light';
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+                    if (document.body) {
+                        document.body.classList.remove('theme-light', 'theme-dark');
+                        document.body.classList.add(theme);
+                        document.body.dataset.theme = theme;
+                    }
+                } catch (e) {
+                    // ignore theme storage errors
+                }
+            })();
+        </script>
         <main class="auth-card">
             <div class="auth-header">
                 <h1 class="auth-title">Reset Password</h1>
@@ -2174,9 +2267,12 @@ def leaderboard():
 @app.route('/logout')
 def logout():
     session.clear()
-    session['logout_notice'] = True
-    # Redirect to start page (landing/start) per spec
-    return redirect(url_for('start_page'))
+    response = redirect(url_for('start_page', logged_out=1))
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    response.headers['Clear-Site-Data'] = '"cache", "cookies", "storage", "executionContexts"'
+    return response
 
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')

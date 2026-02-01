@@ -19,10 +19,60 @@
     <link rel="icon" href="{{ url_for('static', filename='assets/favicon.png') }}">
     <script>
       // Expose auth state to client scripts to prevent unauthorized calls
-      window.IS_AUTHENTICATED = {{ 'true' if session.get('user_id') else 'false' }};
+      (function () {
+        var body = document.body;
+        var flag = body ? body.getAttribute('data-is-authenticated') : 'false';
+        window.IS_AUTHENTICATED = flag === 'true';
+      })();
     </script>
 </head>
-  <body{% if page == 'start' %} class="start-page"{% elif page == 'quiz' %} class="quiz-page"{% elif page == 'admin' %} class="admin-body"{% endif %}>
+  <body data-is-authenticated="{{ 'true' if session.get('user_id') else 'false' }}"{% if page == 'start' %} class="start-page"{% elif page == 'quiz' %} class="quiz-page"{% elif page == 'admin' %} class="admin-body"{% endif %}>
+  <script>
+    (function () {
+      try {
+        var stored = null;
+        try {
+          stored = localStorage.getItem('iv_theme');
+        } catch (e) {
+          stored = null;
+        }
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'theme-dark' : 'theme-light');
+        var body = document.body;
+        if (body) {
+          body.classList.remove('theme-light', 'theme-dark');
+          body.classList.add(theme);
+          body.dataset.theme = theme;
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+      } catch (e) {
+        // ignore theme storage errors
+      }
+    })();
+  </script>
+  {% if page != 'admin' %}
+  <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">
+    <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2"></path>
+        <path d="M12 20v2"></path>
+        <path d="M4.93 4.93l1.41 1.41"></path>
+        <path d="M17.66 17.66l1.41 1.41"></path>
+        <path d="M2 12h2"></path>
+        <path d="M20 12h2"></path>
+        <path d="M4.93 19.07l1.41-1.41"></path>
+        <path d="M17.66 6.34l1.41-1.41"></path>
+      </svg>
+    </span>
+    <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"></path>
+      </svg>
+    </span>
+  </button>
+  {% endif %}
     {% if page == 'start' %}
   <script>document.body.classList.add('heading-anim-init');</script>
   <div id="logout-toast" class="logout-toast" role="alert" aria-live="polite" aria-hidden="{{ 'false' if logout_message|default('') else 'true' }}" data-logout-active="{{ '1' if logout_message|default('') else '0' }}" tabindex="-1" aria-labelledby="logout-toast-message">
@@ -37,8 +87,27 @@
       </button>
     </div>
   </div>
+  {% if logout_message|default('') %}
+  <script>
+    (function () {
+      try {
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, document.title, window.location.pathname);
+          window.history.pushState(null, document.title, window.location.pathname);
+          window.addEventListener('popstate', function () {
+            window.history.pushState(null, document.title, window.location.pathname);
+          });
+        }
+      } catch (e) {
+        // ignore history API errors
+      }
+    })();
+  </script>
+  {% endif %}
   <div class="start-shell">
     <h1 class="start-heading" aria-label="INTERVBOT"><span class="start-heading-left">INTERV</span><span class="start-heading-bar" aria-hidden="true"></span><span class="start-heading-right">BOT</span></h1>
+    <p class="start-subheading" aria-live="polite">Smart Virtual Interviewer</p>
+    <a class="start-cta" href="{{ url_for('login') }}" aria-label="Proceed">Proceed</a>
 
     <div class="ambient-cluster" aria-hidden="true">
       <img src="{{ url_for('static', filename='assets/demo1.png') }}" alt="" class="ambient ambient-1" loading="lazy" />
@@ -54,22 +123,6 @@
       <img src="{{ url_for('static', filename='assets/demo11.png') }}" alt="" class="ambient ambient-11" loading="lazy" />
     </div>
 
-    <div class="container">
-      <label for="switch" class="toggle">
-        <input type="checkbox" class="input" id="switch" />
-        <div class="icon icon--moon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"></path>
-          </svg>
-        </div>
-
-        <div class="icon icon--sun">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"></path>
-          </svg>
-        </div>
-      </label>
-    </div>
 
     <div class="start-auth">
       <main class="dark start-auth-main">
@@ -84,37 +137,6 @@
       </main>
     </div>
 
-  </div>
-
-  <div class="admin-dock" aria-label="Admin quick links">
-    <div class="admin-badge" role="button" tabindex="0" aria-label="Show admin links" aria-expanded="false">
-      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24">
-        <g fill="none">
-          <path d="M24 0v24H0V0h24ZM12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035c-.01-.004-.019-.001-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427c-.002-.01-.009-.017-.017-.018Zm.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093c.012.004.023 0 .029-.008l.004-.014l-.034-.614c-.003-.012-.01-.02-.02-.022Zm-.715.002a.023.023 0 0 0-.027.006l-.006.014l-.034.614c0 .012.007.02.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01l-.184-.092Z" />
-          <path fill="currentColor" d="M16 14a5 5 0 0 1 5 5v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a5 5 0 0 1 5-5h8Zm4-6a1 1 0 0 1 1 1v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1V9a1 1 0 0 1 1-1Zm-8-6a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z" />
-        </g>
-      </svg>
-    </div>
-    <div class="admin-links" aria-label="Social profiles" aria-hidden="true">
-      <button class="social-icon" type="button" data-social="website" data-url="https://www.asimhusain.dev" aria-label="Website" title="Website">
-        <span class="social-tooltip" role="tooltip">Website</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
-          <path d="M28 10h-6V6a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h24a2 2 0 0 0 2-2V12a2 2 0 0 0-2-2ZM12 6h8v4h-8ZM4 26V12h24v14Z" />
-        </svg>
-      </button>
-      <button class="social-icon" type="button" data-social="github" data-url="https://github.com/asimhusain-ai" aria-label="GitHub" title="GitHub">
-        <span class="social-tooltip" role="tooltip">GitHub</span>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.387.6.111.82-.261.82-.577 0-.285-.01-1.04-.016-2.04-3.338.724-4.042-1.416-4.042-1.416-.546-1.387-1.333-1.757-1.333-1.757-1.089-.745.083-.73.083-.73 1.205.085 1.84 1.236 1.84 1.236 1.07 1.834 2.809 1.304 3.495.997.108-.775.418-1.305.76-1.605-2.665-.304-5.467-1.334-5.467-5.93 0-1.31.468-2.381 1.235-3.221-.124-.303-.535-1.525.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.289-1.552 3.296-1.23 3.296-1.23.653 1.651.242 2.873.118 3.176.77.84 1.232 1.911 1.232 3.221 0 4.61-2.807 5.624-5.479 5.921.43.371.823 1.102.823 2.222 0 1.606-.015 2.904-.015 3.296 0 .319.216.694.825.576C20.565 22.092 24 17.595 24 12.297 24 5.67 18.627.297 12 .297z" />
-        </svg>
-      </button>
-      <button class="social-icon" type="button" data-social="linkedin" data-url="https://www.linkedin.com/in/asimhusain1-ai" aria-label="LinkedIn" title="LinkedIn">
-        <span class="social-tooltip" role="tooltip">LinkedIn</span>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" aria-hidden="true">
-          <path d="M196.3 512L103.4 512L103.4 212.9L196.3 212.9L196.3 512zM149.8 172.1C120.1 172.1 96 147.5 96 117.8C96 103.5 101.7 89.9 111.8 79.8C121.9 69.7 135.6 64 149.8 64C164 64 177.7 69.7 187.8 79.8C197.9 89.9 203.6 103.6 203.6 117.8C203.6 147.5 179.5 172.1 149.8 172.1zM543.9 512L451.2 512L451.2 366.4C451.2 331.7 450.5 287.2 402.9 287.2C354.6 287.2 347.2 324.9 347.2 363.9L347.2 512L254.4 512L254.4 212.9L343.5 212.9L343.5 253.7L344.8 253.7C357.2 230.2 387.5 205.4 432.7 205.4C526.7 205.4 544 267.3 544 347.7L544 512L543.9 512z" />
-        </svg>
-      </button>
-    </div>
   </div>
 
   <svg width="0" height="0" style="position: absolute;">
@@ -183,6 +205,7 @@
       <nav class="admin-top-nav" aria-label="Admin navigation">
         <a class="admin-top-nav-link{% if view == 'dashboard' %} active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">Overview</a>
         <a class="admin-top-nav-link{% if view == 'users' %} active{% endif %}" href="{{ url_for('admin.admin_users') }}">Users</a>
+        <a class="admin-top-nav-link" href="{{ url_for('landing') }}">Home</a>
         <a class="admin-top-nav-link" href="{{ url_for('logout') }}">Logout</a>
       </nav>
 
@@ -394,22 +417,6 @@
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <script src="{{ url_for('static', filename='js/start.js') }}"></script>
     {% else %}
-    <div class="container">
-      <label for="switch" class="toggle">
-        <input type="checkbox" class="input" id="switch" />
-        <div class="icon icon--moon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"></path>
-          </svg>
-        </div>
-
-        <div class="icon icon--sun">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"></path>
-          </svg>
-        </div>
-      </label>
-    </div>
     {% if session.get('user_id') %}
     <div class="page-corner-dashboard">
       <a class="goo-button" href="{{ url_for('dashboard') }}" data-goo-magnet="off">DASHBOARD</a>
@@ -481,6 +488,35 @@
                         <option value="Hard">Professional</option>
                     </select>
                 </label>
+            </div>
+
+            <div class="landing-widgets">
+              <article class="chart-card chart-card--doughnut" aria-label="Session totals">
+                <h3 class="chart-title">Sessions</h3>
+                <div class="chart-body">
+                  <div class="chart-canvas">
+                    <canvas id="landingDonut"></canvas>
+                  </div>
+                  <div id="landingDonutLegend" class="chart-legend"></div>
+                </div>
+              </article>
+              <section class="badge-card" aria-label="Achievement badges">
+                <h3 class="badge-title">Achievements</h3>
+                <div class="badge-list">
+                  <div class="badge-item" data-tooltip="First interview completed">
+                    <img src="{{ url_for('static', filename='assets/interviewhero.png') }}" alt="Interview Hero" />
+                    <span>Interview Hero</span>
+                  </div>
+                  <div class="badge-item" data-tooltip="5 quizzes completed">
+                    <img src="{{ url_for('static', filename='assets/skilledperformer.png') }}" alt="Skilled Performer" />
+                    <span>Skilled Performer</span>
+                  </div>
+                  <div class="badge-item" data-tooltip="7 day streak">
+                    <img src="{{ url_for('static', filename='assets/risinglerner.png') }}" alt="Rising Learner" />
+                    <span>Rising Learner</span>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <div style="display: flex; justify-content: center;">
@@ -556,11 +592,14 @@
             </filter>
         </svg>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/cursor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/goo-buttons.js') }}"></script>
     <script src="{{ url_for('static', filename='js/start.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% endif %}
+
+    <script src="{{ url_for('static', filename='js/back-logout.js') }}"></script>
 </body>
 </html>

@@ -5,6 +5,9 @@
   <title>Dashboard | GitHub-Style Sidebar + Charts + Table</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    window.IS_AUTHENTICATED = {{ 'true' if session.get('user_id') else 'false' }};
+  </script>
   <style>
     body[data-theme="theme-dark"] {
       --bg: #0d1117;
@@ -943,7 +946,31 @@
     }
   </style>
 </head>
-<body class="theme-dark">
+<body>
+  <script>
+    (function () {
+      try {
+        var stored = null;
+        try {
+          stored = localStorage.getItem('iv_theme');
+        } catch (e) {
+          stored = null;
+        }
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'theme-dark' : 'theme-light');
+        var body = document.body;
+        if (body) {
+          body.classList.remove('theme-light', 'theme-dark');
+          body.classList.add(theme);
+          body.dataset.theme = theme;
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme === 'theme-dark' ? 'dark' : 'light';
+      } catch (e) {
+        // ignore theme errors
+      }
+    })();
+  </script>
   <div class="app-shell">
     <aside class="sidebar">
       <nav class="sidebar-nav" aria-label="Primary">
@@ -1095,6 +1122,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/back-logout.js') }}"></script>
   <script>
     // Sidebar edit toggle
     const editBtn = document.getElementById("editBtn");

@@ -140,233 +140,66 @@
     // ignore in browsers without URLSearchParams (very old)
   }
 
-  const openSocialLink = (url) => {
-    if (!url) return;
-    try {
-      window.open(url, '_blank', 'noopener');
-    } catch (error) {
-      console.warn('Unable to open social link', error);
-    }
-  };
-
-  const socialColumn = document.getElementById('social-stack');
-  if (socialColumn) {
-    setTimeout(() => {
-      socialColumn.classList.add('show');
-    }, 3000);
-
-    socialColumn.addEventListener('click', (event) => {
-      const button = event.target.closest('.social-icon');
-      if (!button) return;
-      const href = button.dataset.url || button.getAttribute('data-href') || button.getAttribute('href');
-      openSocialLink(href);
-    });
-  }
-
-  const adminDock = document.querySelector('.admin-dock');
-  if (adminDock) {
-    const badge = adminDock.querySelector('.admin-badge');
-    const linkGroup = adminDock.querySelector('.admin-links');
-    const socialButtons = Array.from(adminDock.querySelectorAll('.admin-links .social-icon'));
-
-    let dockOpen = false;
-
-    const shiftFocusOutOfLinks = () => {
-      if (!linkGroup) return;
-      const active = document.activeElement;
-      if (active && linkGroup.contains(active)) {
-        if (badge && typeof badge.focus === 'function') {
-          badge.focus({ preventScroll: true });
-        } else if (typeof active.blur === 'function') {
-          active.blur();
-        }
-      }
-    };
-
-    const setDockState = (open) => {
-      const nextState = !!open;
-      if (!nextState) {
-        shiftFocusOutOfLinks();
-      }
-
-      dockOpen = nextState;
-      adminDock.classList.toggle('is-open', dockOpen);
-      if (badge) {
-        badge.setAttribute('aria-expanded', dockOpen ? 'true' : 'false');
-      }
-      if (linkGroup) {
-        linkGroup.setAttribute('aria-hidden', dockOpen ? 'false' : 'true');
-      }
-      socialButtons.forEach((button) => {
-        button.tabIndex = dockOpen ? 0 : -1;
-      });
-    };
-
-    const toggleDock = () => setDockState(!dockOpen);
-    const closeDock = () => setDockState(false);
-
-    const handleBadgeClick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      toggleDock();
-    };
-
-    const handleBadgeKeydown = (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggleDock();
-      } else if (event.key === 'Escape') {
-        closeDock();
-        if (badge) {
-          badge.blur();
-        }
-      }
-    };
-
-    const handleSocialClick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const button = event.currentTarget;
-      if (!button) return;
-      const href = button.dataset.url || button.getAttribute('data-href') || button.getAttribute('href');
-      openSocialLink(href);
-    };
-
-    const handleSocialKeydown = (event) => {
-      if (event.key === 'Escape') {
-        closeDock();
-      } else if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        const button = event.currentTarget;
-        const href = button.dataset.url || button.getAttribute('data-href') || button.getAttribute('href');
-        openSocialLink(href);
-      }
-    };
-
-    const handleDocumentClick = (event) => {
-      if (!dockOpen) return;
-      if (!adminDock.contains(event.target)) {
-        closeDock();
-      }
-    };
-
-    const handleDocumentKeydown = (event) => {
-      if (!dockOpen) return;
-      if (event.key === 'Escape') {
-        closeDock();
-      }
-    };
-
-    if (badge) {
-      badge.addEventListener('click', handleBadgeClick);
-      badge.addEventListener('keydown', handleBadgeKeydown);
-    }
-
-    socialButtons.forEach((button) => {
-      button.addEventListener('click', handleSocialClick);
-      button.addEventListener('keydown', handleSocialKeydown);
-    });
-
-    document.addEventListener('click', handleDocumentClick);
-    document.addEventListener('keydown', handleDocumentKeydown);
-
-    setDockState(false);
-  }
-
-  const icons = Array.from(document.querySelectorAll('.social-icon'));
-  const magnetSettings = { radius: 120, strength: 0.6, maxOffset: 24 };
-  const states = new Map();
-
-  const ensureState = (el) => {
-    if (states.has(el)) return states.get(el);
-    const state = {
-      target: { x: 0, y: 0 },
-      current: { x: 0, y: 0 },
-      pending: null,
-      magnetFrame: null,
-      smoothFrame: null
-    };
-    states.set(el, state);
-    return state;
-  };
-
-  const applyStyles = (el, state) => {
-    el.style.setProperty('--mag-x', state.current.x.toFixed(2) + 'px');
-    el.style.setProperty('--mag-y', state.current.y.toFixed(2) + 'px');
-  };
-
-  const scheduleSmooth = (el, state) => {
-    if (state.smoothFrame !== null) return;
-    const step = () => {
-      const dx = state.target.x - state.current.x;
-      const dy = state.target.y - state.current.y;
-      const easing = 0.2;
-
-      state.current.x += dx * easing;
-      state.current.y += dy * easing;
-      applyStyles(el, state);
-
-      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
-        state.current.x = state.target.x;
-        state.current.y = state.target.y;
-        applyStyles(el, state);
-        state.smoothFrame = null;
-        return;
-      }
-
-      state.smoothFrame = requestAnimationFrame(step);
-    };
-    state.smoothFrame = requestAnimationFrame(step);
-  };
-
-  const computeTarget = (el, state, clientX, clientY) => {
-    const rect = el.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const dx = clientX - centerX;
-    const dy = clientY - centerY;
-    const distance = Math.hypot(dx, dy);
-
-    if (distance > magnetSettings.radius) {
-      state.target.x = 0;
-      state.target.y = 0;
-    } else {
-      const normalized = 1 - distance / magnetSettings.radius;
-      const pull = normalized * magnetSettings.strength;
-      state.target.x = Math.max(Math.min(dx * pull, magnetSettings.maxOffset), -magnetSettings.maxOffset);
-      state.target.y = Math.max(Math.min(dy * pull, magnetSettings.maxOffset), -magnetSettings.maxOffset);
-    }
-
-    scheduleSmooth(el, state);
-  };
-
-  if (icons.length) {
-    window.addEventListener('pointermove', (event) => {
-      icons.forEach((icon) => {
-        const state = ensureState(icon);
-        state.pending = { x: event.clientX, y: event.clientY };
-        if (state.magnetFrame !== null) return;
-        state.magnetFrame = requestAnimationFrame(() => {
-          state.magnetFrame = null;
-          if (!state.pending) return;
-          computeTarget(icon, state, state.pending.x, state.pending.y);
-          state.pending = null;
-        });
-      });
-    }, { passive: true });
-
-    window.addEventListener('pointerleave', () => {
-      icons.forEach((icon) => {
-        const state = ensureState(icon);
-        state.target.x = 0;
-        state.target.y = 0;
-        scheduleSmooth(icon, state);
-      });
-    });
-  }
-
   if (typeof window.ivRefreshGooButtons === 'function') {
     window.ivRefreshGooButtons();
+  }
+
+  const ambientImages = Array.from(document.querySelectorAll('.ambient-cluster img'));
+  if (ambientImages.length) {
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReduced) {
+      const shuffle = (arr) => {
+        for (let i = arr.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      };
+
+      let order = shuffle(ambientImages.slice());
+      let index = 0;
+      let active = null;
+      const displayMs = 5000;
+      const fadeOutLeadMs = 1000;
+
+      const showNext = () => {
+        if (index >= order.length) {
+          order = shuffle(ambientImages.slice());
+          index = 0;
+        }
+        active = order[index];
+        index += 1;
+        active.classList.add('ambient-active');
+
+        setTimeout(() => {
+          active?.classList.remove('ambient-active');
+        }, Math.max(0, displayMs - fadeOutLeadMs));
+
+        setTimeout(() => {
+          showNext();
+        }, displayMs);
+      };
+
+      const startCycle = () => {
+        showNext();
+      };
+
+      const waitForReady = () => {
+        if (!document.body.classList.contains('heading-anim-init')) {
+          startCycle();
+          return;
+        }
+        requestAnimationFrame(waitForReady);
+      };
+
+      if (document.readyState === 'complete') {
+        waitForReady();
+      } else {
+        window.addEventListener('load', () => {
+          waitForReady();
+        }, { once: true });
+      }
+    }
   }
 
 })();
