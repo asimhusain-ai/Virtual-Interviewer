@@ -170,16 +170,79 @@ The application reads its database connection string from DATABASE_URL. For loca
 DATABASE_URL=sqlite:///users.db
 ```
 
+### PostgreSQL on Microsoft Azure (Detailed Setup)
+This project is designed to run against PostgreSQL in production. If you deployed PostgreSQL on Azure Database for PostgreSQL (Flexible Server), use the steps below to wire it up safely and correctly.
+
+#### 1) Create or confirm your Azure PostgreSQL server
+- Azure Portal → Create a resource → Azure Database for PostgreSQL (Flexible Server).
+- Choose a server name, region, and compute tier (Burstable is fine for dev/staging).
+- Set an admin username/password (you will use these in the connection string).
+- Ensure PostgreSQL 13+ is selected.
+
+#### 2) Networking & firewall
+Choose the option that matches your deployment:
+- Public access: add a firewall rule for your IP, and add the Vercel outbound IPs if needed.
+- Private access: use a VNet and integrate your app with the same network.
+
+In the Azure Portal:
+- Server → Networking → add your client IP, and allow your app runtime IPs.
+
+#### 3) TLS/SSL
+Azure enforces TLS. Use SSL in the connection string (see below). This app uses SQLAlchemy + psycopg2, which supports SSL via query parameters.
+
+#### 4) Create the application database
+In Azure Portal (Query editor) or a SQL client, create a dedicated database if you do not have one already:
+
+```
+CREATE DATABASE virtual_interviewer;
+```
+
+#### 5) Build the DATABASE_URL
+Azure Flexible Server uses a standard PostgreSQL connection string format:
+
+```
+DATABASE_URL=postgresql+psycopg2://<admin_user>:<password>@<server_name>.postgres.database.azure.com:5432/<db_name>?sslmode=require
+```
+
+Example (replace placeholders):
+
+```
+DATABASE_URL=postgresql+psycopg2://myadmin:MySecret@myserver.postgres.database.azure.com:5432/virtual_interviewer?sslmode=require
+```
+
+Notes:
+- If your password contains special characters, URL-encode it.
+- Azure may require the full admin username (the value you set at server creation).
+- Keep sslmode=require for Azure-hosted Postgres.
+
+#### 6) Apply the connection string
+- Local development: put the value in a .env file and restart the app.
+- Vercel deployment: set DATABASE_URL as an Environment Variable in the Vercel project settings.
+
+#### 7) First run / schema creation
+When the app starts, SQLAlchemy will create tables if they do not exist (based on the models in app.py). Ensure the DATABASE_URL is set before the first run so the tables are created in Azure PostgreSQL.
+
+#### 8) Validate connectivity
+- Launch the app and sign up a user.
+- Confirm records are appearing in the Azure database (Query editor → SELECT * FROM users;).
+
+If you run into connection errors, confirm firewall rules, SSL enforcement, and the correctness of the DATABASE_URL.
+
 ---
 
 ## Environment Variables
 
-Create a .env file (loaded via python-dotenv) and provide the variables relevant to your deployment:
+Create a .env file (loaded via python-dotenv) and provide the variables relevant to your deployment.
+
+Where to add environment variables:
+- Local development: add them to .env in the project root.
+- Vercel deployment: Project → Settings → Environment Variables.
+- Other hosts: add them to the platform’s environment configuration (never hardcode secrets).
 
 | Variable | Required | Description |
 | --- | --- | --- |
 | SECRET_KEY | ✅ | Flask session secret; set to a strong random string. |
-| DATABASE_URL | ✅ | SQLAlchemy database URL (PostgreSQL recommended; SQLite supported). |
+| DATABASE_URL | ✅ | SQLAlchemy database URL. For Azure PostgreSQL use: postgresql+psycopg2://<admin_user>:<password>@<server_name>.postgres.database.azure.com:5432/<db_name>?sslmode=require |
 | OPENROUTER_API_KEY | ✅ (for AI) | API key for OpenRouter question generation & answer evaluation. |
 | DEFAULT_ADMIN_EMAIL | ⚙️ | Seed admin user email; auto-promoted on startup (requires password). |
 | DEFAULT_ADMIN_PASSWORD | ⚙️ | Password for the seed admin (>=12 chars). |
