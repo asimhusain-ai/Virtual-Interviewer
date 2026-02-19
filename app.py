@@ -49,7 +49,20 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+def _normalized_database_url():
+    raw_url = (os.getenv("DATABASE_URL") or "").strip()
+    if not raw_url:
+        return raw_url
+
+    if raw_url.startswith("postgres://"):
+        raw_url = raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+psycopg2://"):
+        raw_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+    return raw_url
+
+
+app.config["SQLALCHEMY_DATABASE_URI"] = _normalized_database_url()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -923,14 +936,22 @@ class TimeLog(db.Model):
     )
 
 
+def _is_sqlite_database():
+    try:
+        return db.engine.url.get_backend_name() == 'sqlite'
+    except Exception:
+        return False
+
+
 # Ensure DB and tables exist
 with app.app_context():
     db.create_all()
-    # Ensure 'details' column exists on Result table (safe migration for existing DB)
-    _ensure_result_details_column()
-    _ensure_user_admin_column()
-    _ensure_usermeta_columns()
-    _ensure_otp_attempts_column()
+    # SQLite-only compatibility migrations for older local databases
+    if _is_sqlite_database():
+        _ensure_result_details_column()
+        _ensure_user_admin_column()
+        _ensure_usermeta_columns()
+        _ensure_otp_attempts_column()
     # Ensure Profile table exists
     try:
         db.create_all()
