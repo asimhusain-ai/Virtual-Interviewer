@@ -20,9 +20,7 @@
     <script>
       // Expose auth state to client scripts to prevent unauthorized calls
       (function () {
-        var body = document.body;
-        var flag = body ? body.getAttribute('data-is-authenticated') : 'false';
-        window.IS_AUTHENTICATED = flag === 'true';
+        window.IS_AUTHENTICATED = {{ 'true' if session.get('user_id') else 'false' }};
       })();
     </script>
 </head>

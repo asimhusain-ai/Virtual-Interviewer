@@ -1332,7 +1332,7 @@ _login_form = """
                 <dl class="demo-credentials-list">
                     <div class="demo-credentials-row">
                         <dt>Email</dt>
-                        <dd data-demo-email>donihid579@coswz.com</dd>
+                        <dd data-demo-email>fovok22867@iaciu.com</dd>
                     </div>
                     <div class="demo-credentials-row">
                         <dt>Password</dt>
